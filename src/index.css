@@ -1,111 +1,258 @@
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+/* 1. استدعاء الخطوط */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+/* 2. استدعاء Tailwind الإصدار الرابع */
+@import "tailwindcss";
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* 3. تعريف الـ Theme للـ Tailwind v4 */
+@theme {
+  /* الخطوط */
+  --font-headline: "Plus Jakarta Sans", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-label: "Inter", sans-serif;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  /* المسافات والحدود (Border Radius) */
+  --radius-DEFAULT: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+
+  /* ربط ألوان Tailwind بمتغيرات الـ CSS */
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-primary-container: var(--primary-container);
+  --color-on-primary-container: var(--on-primary-container);
+
+  --color-secondary: var(--secondary);
+  --color-on-secondary: var(--on-secondary);
+  --color-secondary-container: var(--secondary-container);
+  --color-on-secondary-container: var(--on-secondary-container);
+
+  --color-tertiary: var(--tertiary);
+  --color-on-tertiary: var(--on-tertiary);
+  --color-tertiary-container: var(--tertiary-container);
+  --color-on-tertiary-container: var(--on-tertiary-container);
+
+  --color-error: var(--error);
+  --color-on-error: var(--on-error);
+  --color-error-container: var(--error-container);
+  --color-on-error-container: var(--on-error-container);
+
+  --color-background: var(--background);
+  --color-on-background: var(--on-background);
+
+  --color-surface: var(--surface);
+  --color-on-surface: var(--on-surface);
+  --color-surface-variant: var(--surface-variant);
+  --color-on-surface-variant: var(--on-surface-variant);
+
+  --color-outline: var(--outline);
+  --color-outline-variant: var(--outline-variant);
+
+  --color-surface-container-lowest: var(--surface-container-lowest);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+
+  --color-inverse-surface: var(--inverse-surface);
+  --color-inverse-on-surface: var(--inverse-on-surface);
+  --color-inverse-primary: var(--inverse-primary);
+
+  --color-surface-dim: var(--surface-dim);
+  --color-surface-bright: var(--surface-bright);
+
+  /* الألوان الإضافية (Fixed Colors) */
+  --color-primary-fixed: var(--primary-fixed);
+  --color-primary-fixed-dim: var(--primary-fixed-dim);
+  --color-on-primary-fixed: var(--on-primary-fixed);
+  --color-on-primary-fixed-variant: var(--on-primary-fixed-variant);
 }
 
-@media (prefers-color-scheme: dark) {
+/* 4. المتغيرات والألوان للـ Light والـ Dark Mode */
+@layer base {
+
+  /* Light Mode */
   :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+    --primary: #0027ce;
+    --on-primary: #ffffff;
+    --primary-container: #2e47e6;
+    --on-primary-container: #cfd3ff;
+
+    --secondary: #515f74;
+    --on-secondary: #ffffff;
+    --secondary-container: #d5e3fc;
+    --on-secondary-container: #57657a;
+
+    --tertiary: #812400;
+    --on-tertiary: #ffffff;
+    --tertiary-container: #aa3200;
+    --on-tertiary-container: #ffcaba;
+
+    --error: #ba1a1a;
+    --on-error: #ffffff;
+    --error-container: #ffdad6;
+    --on-error-container: #93000a;
+
+    --background: #faf8ff;
+    --on-background: #131b2e;
+
+    --surface: #faf8ff;
+    --on-surface: #131b2e;
+    --surface-variant: #dae2fd;
+    --on-surface-variant: #444655;
+
+    --outline: #757687;
+    --outline-variant: #c5c5d8;
+
+    --surface-container-lowest: #ffffff;
+    --surface-container-low: #f2f3ff;
+    --surface-container: #eaedff;
+    --surface-container-high: #e2e7ff;
+    --surface-container-highest: #dae2fd;
+
+    --inverse-surface: #283044;
+    --inverse-on-surface: #eef0ff;
+    --inverse-primary: #bcc3ff;
+
+    --surface-dim: #d2d9f4;
+    --surface-bright: #faf8ff;
+
+    --primary-fixed: #dfe0ff;
+    --primary-fixed-dim: #bcc3ff;
+    --on-primary-fixed: #000d60;
+    --on-primary-fixed-variant: #0329d1;
   }
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
+  /* Dark Mode */
+  .dark {
+    --primary: #3b82f6;
+    --on-primary: #ffffff;
+    --primary-container: #1e40af;
+    --on-primary-container: #dbeafe;
+
+    --secondary: #94a3b8;
+    --on-secondary: #ffffff;
+    --secondary-container: #334155;
+    --on-secondary-container: #f8fafc;
+
+    --tertiary: #f43f5e;
+    --on-tertiary: #ffffff;
+    --tertiary-container: #9f1239;
+    --on-tertiary-container: #fecdd3;
+
+    --error: #ef4444;
+    --on-error: #ffffff;
+    --error-container: #991b1b;
+    --on-error-container: #fca5a5;
+
+    --background: #0f172a;
+    --on-background: #f8fafc;
+
+    --surface: #0f172a;
+    --on-surface: #f8fafc;
+    --surface-variant: #1e293b;
+    --on-surface-variant: #cbd5e1;
+
+    --outline: #94a3b8;
+    --outline-variant: #475569;
+
+    --surface-container-lowest: #1e293b;
+    --surface-container-low: #1e293b;
+    --surface-container: #1e293b;
+    --surface-container-high: #334155;
+    --surface-container-highest: #334155;
+
+    --inverse-surface: #f8fafc;
+    --inverse-on-surface: #0f172a;
+    --inverse-primary: #1e3a8a;
+
+    --surface-dim: #0f172a;
+    --surface-bright: #1e293b;
+
+    --primary-fixed: #bfdbfe;
+    --primary-fixed-dim: #93c5fd;
+    --on-primary-fixed: #eff6ff;
+    --on-primary-fixed-variant: #dbeafe;
+  }
+
+  /* تطبيق القواعد العامة */
+  body {
+    background-color: var(--surface);
+    color: var(--on-surface);
+    font-family: var(--font-body);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  .font-headline {
+    font-family: var(--font-headline);
   }
 }
 
-body {
-  margin: 0;
-}
+@layer utilities {
+  .primary-btn {
+    @apply bg-primary text-on-primary px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-opacity flex items-center gap-2 cursor-pointer;
+  }
 
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
+  .secondary-btn {
+    @apply bg-secondary text-on-secondary px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-secondary/20 hover:opacity-90 transition-opacity flex items-center gap-2 cursor-pointer;
+  }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+  .modal-shadow {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+
+  .ghost-border {
+    border: 1.5px solid transparent;
+  }
+
+  .ghost-border:focus-within {
+    border-color: var(--primary);
+  }
+
+  .gradient-btn {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%);
   }
 }
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
   }
 }
-p {
-  margin: 0;
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+.animate-in {
+  animation-duration: 300ms;
+  animation-fill-mode: both;
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+.fade-in {
+  animation-name: fadeIn;
+}
+
+.scale-in-center {
+  animation-name: scaleIn;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
