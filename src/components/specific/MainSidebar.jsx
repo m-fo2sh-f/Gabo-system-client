@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { addNewItems } from '../../constants/sideBarLinks';
+import { menuItems } from '../../constants/sideBarLinks';
 import { GiHamburgerMenu } from "react-icons/gi";
 import { MdClose } from "react-icons/md";
 import { useTheme } from '../../contexts/ThemeContext';
 import { IoMdSunny } from "react-icons/io";
 import { MdOutlineDarkMode } from "react-icons/md";
+import { useLocation, useNavigate } from 'react-router-dom';
 const MainSidebar = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { theme, toggleTheme } = useTheme();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const isAddNewPage = location.pathname.startsWith('/add-new');
     const toggleMobileMenu = () => {
         setIsMobileMenuOpen(!isMobileMenuOpen);
     };
@@ -30,15 +34,16 @@ const MainSidebar = () => {
                         )}
                     </button>
                     <h1 className="text-xl font-bold tracking-tight text-primary font-headline">
-                        Canvas Agency
+                        Agency
                     </h1>
-                    <button className='primary-btn'>Add New</button>
+                    <button
+                        onClick={() => isAddNewPage ? navigate('/') : navigate('/add-new')}
+                        className='primary-btn'>{isAddNewPage ? 'Back' : 'Add New'}</button>
                 </div>
-
                 {/* Mobile Menu Dropdown */}
                 {isMobileMenuOpen && (
                     <div className="flex flex-col px-4 pb-4 pt-2 space-y-2 animate-in fade-in duration-200">
-                        {addNewItems.map((item) => (
+                        {menuItems.map((item) => (
                             <NavLink
                                 key={item.path}
                                 to={item.path}
@@ -100,7 +105,7 @@ const MainSidebar = () => {
                 {/* Navigation Links */}
                 < div className="flex-1 space-y-2" >
                     {
-                        addNewItems.map((item) => (
+                        menuItems.map((item) => (
                             <NavLink
                                 key={item.path}
                                 to={item.path}

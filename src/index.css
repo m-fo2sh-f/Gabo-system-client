@@ -192,6 +192,38 @@
   .font-headline {
     font-family: var(--font-headline);
   }
+
+  /* Date input calendar icon styling */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: opacity(0.5);
+    cursor: pointer;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    filter: opacity(0.8);
+  }
+
+  .dark input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) opacity(0.5);
+  }
+
+  .dark input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    filter: invert(1) opacity(0.8);
+  }
+
+  /* Date input default text styling (mm/dd/yyyy) - make it look like a placeholder */
+  input[type="date"]:not(:focus):not([value]):not(.has-value) {
+    color: var(--on-surface-variant);
+    opacity: 0.3;
+    font-weight: 400;
+  }
+
+  input[type="date"]:focus,
+  input[type="date"].has-value {
+    color: var(--on-surface);
+    opacity: 1;
+    font-weight: 500;
+  }
 }
 
 @layer utilities {

@@ -6,10 +6,13 @@ import { MdClose } from "react-icons/md";
 import { useTheme } from '../../contexts/ThemeContext';
 import { IoMdSunny } from "react-icons/io";
 import { MdOutlineDarkMode } from "react-icons/md";
+import { useLocation, useNavigate } from 'react-router-dom';
 const AddNewSidebar = () => {
-
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { theme, toggleTheme } = useTheme();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const isAddNewPage = location.pathname.startsWith('/add-new');
     const toggleMobileMenu = () => {
         setIsMobileMenuOpen(!isMobileMenuOpen);
     };
@@ -31,15 +34,17 @@ const AddNewSidebar = () => {
                         )}
                     </button>
                     <h1 className="text-xl font-bold tracking-tight text-primary font-headline">
-                        Canvas Agency
+                        Agency
                     </h1>
-                    <button className='primary-btn'>Add New</button>
+                    <button
+                        onClick={() => isAddNewPage ? navigate('/') : navigate('/add-new')}
+                        className='primary-btn'>{isAddNewPage ? 'Back' : 'Add New'}</button>
                 </div>
 
                 {/* Mobile Menu Dropdown */}
                 {isMobileMenuOpen && (
                     <div className="flex flex-col px-4 pb-4 pt-2 space-y-2 animate-in fade-in duration-200">
-                        {menuItems.map((item) => (
+                        {addNewItems.map((item) => (
                             <NavLink
                                 key={item.path}
                                 to={item.path}

@@ -3,8 +3,15 @@ import MainLayout from '../components/layout/MainLayout';
 import Dashboard from '../pages/Dashboard/Dashboard';
 import Clients from '../pages/Dashboard/Clients';
 import Transactions from '../pages/Dashboard/Transactions';
+import Tasks from '../pages/Dashboard/Tasks';
+import Employees from '../pages/Dashboard/Employees';
+
 // Add New imports
 import AddNewLayout from '../components/layout/AddNewLayout';
+import ClientForm from '../pages/Add-new/ClientForm';
+import EmployeeForm from '../pages/Add-new/EmployeeForm';
+import TaskForm from '../pages/Add-new/TaskForm';
+import TransactionForm from '../pages/Add-new/TransactionForm';
 
 const router = createBrowserRouter([
     {
@@ -14,8 +21,8 @@ const router = createBrowserRouter([
             { index: true, element: <Dashboard /> },
             { path: 'clients', element: <Clients /> },
             { path: 'transactions', element: <Transactions /> },
-            { path: 'employees', element: <div>Employees Content Coming Soon...</div> },
-            { path: 'tasks', element: <div>Tasks Content Coming Soon...</div> },
+            { path: 'employees', element: <Employees /> },
+            { path: 'tasks', element: <Tasks /> },
         ],
     },
     {
@@ -23,10 +30,10 @@ const router = createBrowserRouter([
         element: <AddNewLayout />,
         children: [
             { index: true, element: <Navigate to="/add-new/client" /> },
-            { path: 'client', element: <div>Client Content Coming Soon...</div> },
-            { path: 'employee', element: <div>Employee Content Coming Soon...</div> },
-            { path: 'task', element: <div>Task Content Coming Soon...</div> },
-            { path: 'transaction', element: <div>Transaction Content Coming Soon...</div> },
+            { path: 'client', element: <ClientForm /> },
+            { path: 'employee', element: <EmployeeForm /> },
+            { path: 'task', element: <TaskForm /> },
+            { path: 'transaction', element: <TransactionForm /> },
         ],
     },
 ]);
