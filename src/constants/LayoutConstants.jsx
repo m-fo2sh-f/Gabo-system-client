@@ -20,3 +20,15 @@ export const addNewItems = [
     { path: '/add-new/task', icon: <FaTasks className="size-5" />, label: 'New Task' },
     { path: '/add-new/transaction', icon: <FaMoneyBillTrendUp className="size-5" />, label: 'New Transaction' },
 ];
+
+export const routeConfigs = {
+    '/': { title: 'Dashboard Overview', subtitle: "Here's what's happening today."  },
+    '/clients': { title: 'Clients Management', subtitle: 'Manage your client base and their details.' },
+    '/transactions': { title: 'Transactions History', subtitle: 'Monitor your cash flow and records.' },
+    '/employees': { title: 'Employees List', subtitle: 'View and manage your team members.' },
+    '/tasks': { title: 'Task Manager', subtitle: 'Track progress and assignments.' },
+    // صفحات الـ Add New
+    '/add-new/client': { title: 'Add New Client', subtitle: 'Fill in the details to register a new client.' },
+    '/add-new/employee': { title: 'Add New Employee', subtitle: 'Register a new staff member.' },
+    // صفحات الـ Details (باستخدام regex أو التحقق من البداية)
+};

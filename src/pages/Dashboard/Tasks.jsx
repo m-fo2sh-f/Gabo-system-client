@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Input from '../../components/common/input';
 import { MdKeyboardArrowRight, MdKeyboardArrowLeft } from "react-icons/md";
 import { IoSearchSharp } from "react-icons/io5";
-
+import { useNavigate } from 'react-router-dom';
 const mockTasks = [
     {
         id: 1,
@@ -37,6 +37,7 @@ const mockTasks = [
 ];
 
 const Tasks = () => {
+    const navigate = useNavigate();
     const [search, setSearch] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
 
@@ -109,7 +110,7 @@ const Tasks = () => {
                         </thead>
                         <tbody className="font-body text-sm text-on-surface">
                             {filteredTasks.length > 0 ? filteredTasks.map((task) => (
-                                <tr key={task.id} className="hover:bg-surface-container-high/30 transition-colors group cursor-pointer" title="Click to view task details">
+                                <tr key={task.id} onClick={() => navigate(`/details/task/${task.id}`)} className="hover:bg-surface-container-high/30 transition-colors group cursor-pointer" title="Click to view task details">
                                     <td className="py-4 pl-2 border-b border-surface-container-high/50">
                                         <div className="flex flex-col">
                                             <span className="font-semibold text-on-surface group-hover:text-primary transition-colors">{task.client_name}</span>

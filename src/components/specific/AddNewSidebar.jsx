@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { addNewItems } from '../../constants/sideBarLinks';
+import { addNewItems } from '../../constants/LayoutConstants';
 import { GiHamburgerMenu } from "react-icons/gi";
 import { MdClose } from "react-icons/md";
 import { useTheme } from '../../contexts/ThemeContext';
@@ -34,7 +34,7 @@ const AddNewSidebar = () => {
                         )}
                     </button>
                     <h1 className="text-xl font-bold tracking-tight text-primary font-headline">
-                        Agency
+                        Agora
                     </h1>
                     <button
                         onClick={() => isAddNewPage ? navigate('/') : navigate('/add-new')}

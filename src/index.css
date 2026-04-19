@@ -228,11 +228,15 @@
 
 @layer utilities {
   .primary-btn {
-    @apply bg-primary text-on-primary px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-opacity flex items-center gap-2 cursor-pointer;
+    @apply bg-primary text-on-primary px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-opacity flex items-center gap-2 cursor-pointer justify-center;
+  }
+
+  .error-btn {
+    @apply bg-error text-on-error px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-error/20 hover:opacity-90 transition-opacity flex items-center gap-2 cursor-pointer justify-center;
   }
 
   .secondary-btn {
-    @apply bg-secondary text-on-secondary px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-secondary/20 hover:opacity-90 transition-opacity flex items-center gap-2 cursor-pointer;
+    @apply bg-secondary text-on-secondary px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-secondary/20 hover:opacity-90 transition-opacity flex items-center gap-2 cursor-pointer justify-center;
   }
 
 

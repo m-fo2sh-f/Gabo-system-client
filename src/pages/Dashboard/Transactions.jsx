@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Input from '../../components/common/input';
 import { MdKeyboardArrowRight, MdKeyboardArrowLeft, MdArrowDownward, MdArrowUpward } from "react-icons/md";
 import { IoSearchSharp } from "react-icons/io5";
-
+import { useNavigate } from 'react-router-dom';
 const mockTransactions = [
     {
         id: 1,
@@ -43,10 +43,10 @@ const mockTransactions = [
 ];
 
 const Transactions = () => {
+    const navigate = useNavigate();
     const [search, setSearch] = useState('');
     const [filterType, setFilterType] = useState('all');
 
-    // Filter Logic
     const filteredTransactions = mockTransactions.filter(trx => {
         const matchesSearch = trx.related_to.toLowerCase().includes(search.toLowerCase()) ||
             trx.category.toLowerCase().includes(search.toLowerCase());
@@ -110,7 +110,7 @@ const Transactions = () => {
                         </thead>
                         <tbody className="font-body text-sm text-on-surface">
                             {filteredTransactions.length > 0 ? filteredTransactions.map((trx) => (
-                                <tr key={trx.id} className="hover:bg-surface-container-high/30 transition-colors group cursor-pointer" title="Click to view details">
+                                <tr key={trx.id} onClick={() => navigate(`/details/transaction/${trx.id}`)} className="hover:bg-surface-container-high/30 transition-colors group cursor-pointer" title="Click to view details">
                                     <td className="py-4 pl-2 border-b border-surface-container-high/50">
                                         <div className="flex flex-col">
                                             <span className="font-semibold text-on-surface group-hover:text-primary transition-colors">

@@ -114,6 +114,13 @@ const TransactionForm = () => {
                     />
                 )}
 
+                <Input
+                    label="Amount"
+                    type="number"
+                    placeholder="Enter Amount"
+                    {...register("amount", { required: "Amount is required" })}
+                    error={errors.amount?.message}
+                />
                 <Select
                     label="Payment Method"
                     options={paymentMethodOptions}

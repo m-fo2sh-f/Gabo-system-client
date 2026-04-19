@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Input from '../../components/common/input';
 import { MdKeyboardArrowRight, MdKeyboardArrowLeft } from "react-icons/md";
 import { IoSearchSharp } from "react-icons/io5";
-
+import { useNavigate } from 'react-router-dom';
 const mockEmployees = [
     {
         id: 1,
@@ -36,6 +36,7 @@ const mockEmployees = [
 const Employees = () => {
     const [search, setSearch] = useState('');
     const [filterType, setFilterType] = useState('all');
+    const navigate = useNavigate();
 
     // Filter Logic
     const filteredEmployees = mockEmployees.filter(emp => {
@@ -103,10 +104,10 @@ const Employees = () => {
                         </thead>
                         <tbody className="font-body text-sm text-on-surface">
                             {filteredEmployees.length > 0 ? filteredEmployees.map((emp) => (
-                                <tr key={emp.id} className="hover:bg-surface-container-high/30 transition-colors group cursor-pointer" title="Click to view full profile">
+                                <tr key={emp.id} onClick={() => navigate(`/details/employee/${emp.id}`)} className="hover:bg-surface-container-high/30 transition-colors group cursor-pointer" title="Click to view full profile">
                                     <td className="py-4 pl-2 border-b border-surface-container-high/50">
                                         <div className="flex items-center gap-3">
-                                            
+
                                             <div className="flex flex-col">
                                                 <span className="font-semibold text-on-surface group-hover:text-primary transition-colors">{emp.name}</span>
                                                 <span className="text-xs text-on-surface-variant sm:hidden mt-0.5">{emp.job_title}</span>

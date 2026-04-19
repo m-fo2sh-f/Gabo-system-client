@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { menuItems } from '../../constants/sideBarLinks';
+import { menuItems } from '../../constants/LayoutConstants';
 import { GiHamburgerMenu } from "react-icons/gi";
 import { MdClose } from "react-icons/md";
 import { useTheme } from '../../contexts/ThemeContext';
