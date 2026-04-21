@@ -7,7 +7,16 @@ const ClientDetails = () => {
     const navigate = useNavigate();
     const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+    const { mutateAsync: useClients, data: client, isLoading, error } = useClients(id);
 
+
+    if (isLoading) {
+        return <div>Loading...</div>;
+    }
+
+    if (error) {
+        return <div>Error: {error.message}</div>;
+    }
     const handleDelete = () => {
         setShowDeleteModal(false);
     }
@@ -37,8 +46,8 @@ const ClientDetails = () => {
                         <div className="w-24 h-24 rounded-full bg-surface-container-highest mb-6 overflow-hidden ghost-border shadow-[0_10px_20px_rgba(19,27,46,0.03)] flex items-center justify-center">
                             <img alt="Acme Corp Company Logo" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgLLioAIySJk40XeGsX5X2gjC76w3Hxp0eUi3m3fYDudt5OZ1526Q4BbJXrROnlEiOj8bibgv_zjYPv9M5GAbdlLu7NYisKqaoKCQpsG3VDA329cvjR_ZxyyN-rnvG27D7IsSJfD8gtUva7pfUfZRZ4PpUaZ4-l0CZjbHAii4Xw3pIf7mNKMq7Zw0vO2sxu0h6fKp34ORQ0WsXkJzjPDfRWCOaREr1GSyEiLWgCi7h6xMXGAx1VSIv6V2oxMDZgtH8TqzYIEKQ8sY" />
                         </div>
-                        <h2 className="font-headline text-2xl font-bold text-on-surface mb-2">Acme Corp</h2>
-                        <p className="font-body text-on-surface-variant text-sm mb-6">Global Logistics & Supply Chain</p>
+                        <h2 className="font-headline text-2xl font-bold text-on-surface mb-2">{client?.name}</h2>
+                        <p className="font-body text-on-surface-variant text-sm mb-6">{client?.email}</p>
                         <div className="px-4 py-1.5 bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 rounded-full font-label text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5">
                             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                             Active

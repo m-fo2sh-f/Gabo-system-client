@@ -22,40 +22,63 @@ import EmployeeDetails from '../pages/Details/EmployeeDetails';
 import TaskDetails from '../pages/Details/TaskDetails';
 import TransactionDetails from '../pages/Details/TransactionDetails';
 
+// Auth imports
+import Login from '../pages/auth/login';
+import ProtectedRoutes from './ProtectedRoutes';
+import GuestRoutes from './GuestRoutes';
+
 const router = createBrowserRouter([
+
     {
         path: '/',
-        element: <MainLayout />,
+        element: <GuestRoutes />,
         children: [
-            { index: true, element: <Dashboard /> },
-            { path: 'clients', element: <Clients /> },
-            { path: 'transactions', element: <Transactions /> },
-            { path: 'employees', element: <Employees /> },
-            { path: 'tasks', element: <Tasks /> },
-        ],
+            {
+                path: '/login',
+                element: <Login />,
+            }
+        ]
     },
     {
-        path: '/add-new',
-        element: <AddNewLayout />,
+        path: '/',
+        element: <ProtectedRoutes />,
         children: [
-            { index: true, element: <Navigate to="/add-new/client" /> },
-            { path: 'client', element: <ClientForm /> },
-            { path: 'employee', element: <EmployeeForm /> },
-            { path: 'task', element: <TaskForm /> },
-            { path: 'transaction', element: <TransactionForm /> },
-        ],
-    },
-    {
-        path: '/details',
-        element: <DetailsLayout />,
-        children: [
-            { index: true, element: <Navigate to="/details/client" /> },
-            { path: 'client/:id', element: <ClientDetails /> },
-            { path: 'employee/:id', element: <EmployeeDetails /> },
-            { path: 'task/:id', element: <TaskDetails /> },
-            { path: 'transaction/:id', element: <TransactionDetails /> },
-        ],
-    },
+            {
+                path: '/',
+                element: <MainLayout />,
+                children: [
+                    { index: true, element: <Dashboard /> },
+                    { path: 'clients', element: <Clients /> },
+                    { path: 'transactions', element: <Transactions /> },
+                    { path: 'employees', element: <Employees /> },
+                    { path: 'tasks', element: <Tasks /> },
+                ],
+            },
+
+            {
+                path: '/add-new',
+                element: <AddNewLayout />,
+                children: [
+                    { index: true, element: <Navigate to="/add-new/client" /> },
+                    { path: 'client', element: <ClientForm /> },
+                    { path: 'employee', element: <EmployeeForm /> },
+                    { path: 'task', element: <TaskForm /> },
+                    { path: 'transaction', element: <TransactionForm /> },
+                ],
+            },
+            {
+                path: '/details',
+                element: <DetailsLayout />,
+                children: [
+                    { index: true, element: <Navigate to="/details/client" /> },
+                    { path: 'client/:id', element: <ClientDetails /> },
+                    { path: 'employee/:id', element: <EmployeeDetails /> },
+                    { path: 'task/:id', element: <TaskDetails /> },
+                    { path: 'transaction/:id', element: <TransactionDetails /> },
+                ],
+            },
+        ]
+    }
 ]);
 
 export default router;
