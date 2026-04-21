@@ -1,20 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import Input from '../../components/common/input';
 import Select from '../../components/common/select';
 import { EmployeeeState } from '../../constants/FormConstants.jsx';
-import { useCreateEmployee } from '../../hooks/api/useEmployees';
+import { useCreateEmployee, useUpdateEmployee, useEmployee } from '../../hooks/api/useEmployees';
 
 const EmployeeForm = () => {
+    const { id } = useParams();
+    const isEdit = !!id;
     const [isFreelance, setIsFreelance] = useState(false);
     const navigate = useNavigate();
-    const { mutateAsync: createEmployee, isPending, error: apiError } = useCreateEmployee();
+    
+    const { mutateAsync: createEmployee, isPending: isCreating, error: createError } = useCreateEmployee();
+    const { mutateAsync: updateEmployee, isPending: isUpdating, error: updateError } = useUpdateEmployee();
+    const { data: employeeData, isLoading: isLoadingInitial } = useEmployee(id);
+    
+    const isPending = isCreating || isUpdating;
+    const apiError = createError || updateError;
 
     const {
         register,
         handleSubmit,
         setValue,
+        reset,
         formState: { errors }
     } = useForm({
         defaultValues: {
@@ -25,6 +35,22 @@ const EmployeeForm = () => {
     useEffect(() => {
         setValue('employment_type', isFreelance ? 'freelance' : 'full_time');
     }, [isFreelance, setValue]);
+
+    useEffect(() => {
+        if (isEdit && employeeData?.data) {
+            const data = employeeData.data;
+            reset({
+                name: data.name ?? '',
+                phone: data.phone ?? '',
+                job_title: data.job_title?.name ?? data.job_title ?? '',
+                base_salary: data.base_salary ?? '',
+                commission_rate: data.commission_rate ?? '',
+                employee_status: data.employee_status ?? 'active',
+                notes: data.notes ?? '',
+            });
+            setIsFreelance(data.employment_type === 'freelance');
+        }
+    }, [isEdit, employeeData, reset]);
 
     const onSubmit = async (data) => {
         try {
@@ -39,12 +65,33 @@ const EmployeeForm = () => {
                     : { base_salary: parseFloat(data.base_salary) }),
                 ...(data.job_title && { job_title: data.job_title }),
             };
-            await createEmployee(payload);
-            navigate('/employees');
+
+            if (isEdit) {
+                await updateEmployee({ id, ...payload });
+                toast.success('Employee updated successfully!');
+                navigate(`/details/employee/${id}`);
+            } else {
+                await createEmployee(payload);
+                toast.success('Employee created successfully!');
+                navigate('/employees');
+            }
         } catch {
             // error is captured in apiError
         }
     };
+
+    if (isEdit && isLoadingInitial) {
+        return (
+            <div className="flex flex-col h-full bg-surface text-on-surface animate-pulse p-6">
+                <div className="h-4 w-32 bg-surface-container-high rounded mb-4" />
+                <div className="h-12 bg-surface-container-low rounded-xl mb-6" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="h-14 bg-surface-container-low rounded-xl" />
+                    <div className="h-14 bg-surface-container-low rounded-xl" />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -170,7 +217,7 @@ const EmployeeForm = () => {
                     ) : (
                         <>
                             <span className="material-symbols-outlined text-[18px]">save</span>
-                            Save Employee
+                            {isEdit ? 'Update Employee' : 'Save Employee'}
                         </>
                     )}
                 </button>

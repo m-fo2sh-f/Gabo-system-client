@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Input from '../../components/common/input';
-import { MdKeyboardArrowRight, MdKeyboardArrowLeft } from "react-icons/md";
+import { MdKeyboardArrowRight, MdKeyboardArrowLeft, MdEdit } from "react-icons/md";
 import { IoSearchSharp } from "react-icons/io5";
 import { useNavigate } from 'react-router-dom';
 import { useClients } from '../../hooks/api/useClients';
@@ -106,6 +106,7 @@ const Clients = () => {
                                 <th className="pb-4 font-medium">Status</th>
                                 <th className="pb-4 font-medium hidden md:table-cell">Payment Cycle</th>
                                 <th className="pb-4 font-medium text-right pr-2 hidden lg:table-cell">Start Date</th>
+                                <th className="pb-4 font-medium text-center pr-2 w-10"></th>
                             </tr>
                         </thead>
                         <tbody className="font-body text-sm text-on-surface">
@@ -133,10 +134,22 @@ const Clients = () => {
                                     <td className="py-4 text-right pr-2 font-medium border-b border-surface-container-high/50 hidden lg:table-cell">
                                         {client.contract_start_date ? new Date(client.contract_start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
                                     </td>
+                                    <td className="py-4 border-b border-surface-container-high/50 text-center pr-2">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigate(`/edit/client/${client.id}`);
+                                            }}
+                                            className="p-1.5 rounded-lg text-on-surface-variant hover:text-primary hover:bg-primary/10 transition-colors"
+                                            title="Edit Client"
+                                        >
+                                            <MdEdit className="text-[18px]" />
+                                        </button>
+                                    </td>
                                 </tr>
                             )) : (
                                 <tr>
-                                    <td colSpan="5" className="py-12 text-center text-on-surface-variant">
+                                    <td colSpan="6" className="py-12 text-center text-on-surface-variant">
                                         <div className="flex flex-col items-center gap-2">
                                             <span className="material-symbols-outlined text-[40px] text-outline">person_search</span>
                                             <p>No clients found matching your search.</p>

@@ -1,21 +1,31 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import Input from '../../components/common/input';
 import Select from '../../components/common/select';
 import { paymentCycleOptions, clientStatusOptions, socialMediaOptions } from '../../constants/FormConstants.jsx';
 import { IoMdAddCircleOutline } from "react-icons/io";
 import { MdDelete } from "react-icons/md";
-import { useCreateClient } from '../../hooks/api/useClients';
+import { useCreateClient, useUpdateClient, useClient } from '../../hooks/api/useClients';
 
 const ClientForm = () => {
+    const { id } = useParams();
+    const isEdit = !!id;
     const navigate = useNavigate();
-    const { mutateAsync: createClient, isPending, error: apiError } = useCreateClient();
+    
+    const { mutateAsync: createClient, isPending: isCreating, error: createError } = useCreateClient();
+    const { mutateAsync: updateClient, isPending: isUpdating, error: updateError } = useUpdateClient();
+    const { data: clientData, isLoading: isLoadingInitial } = useClient(id);
+    
+    const isPending = isCreating || isUpdating;
+    const apiError = createError || updateError;
 
     const {
         register,
         control,
         handleSubmit,
+        reset,
         formState: { errors }
     } = useForm({
         defaultValues: {
@@ -23,6 +33,24 @@ const ClientForm = () => {
             social_links: [],
         }
     });
+
+    useEffect(() => {
+        if (isEdit && clientData?.data) {
+            const data = clientData.data;
+            reset({
+                name: data.name ?? '',
+                brand_name: data.brand_name ?? '',
+                address: data.address ?? '',
+                phone: data.phone ?? '',
+                contract_start_date: data.contract_start_date ? data.contract_start_date.split('T')[0] : '', // format date if needed
+                contract_value: data.contract_value ?? '',
+                payment_cycle: data.payment_cycle ?? '',
+                status: data.status ?? 'active',
+                notes: data.notes ?? '',
+                social_links: data.social_links ?? [],
+            });
+        }
+    }, [isEdit, clientData, reset]);
 
     const { fields, append, remove } = useFieldArray({ control, name: 'social_links' });
 
@@ -40,12 +68,34 @@ const ClientForm = () => {
                 ...(data.notes && { notes: data.notes }),
                 social_links: (data.social_links ?? []).filter(l => l.platform && l.url),
             };
-            await createClient(payload);
-            navigate('/clients');
+
+            if (isEdit) {
+                await updateClient({ id, ...payload });
+                toast.success('Client updated successfully!');
+                navigate(`/details/client/${id}`);
+            } else {
+                await createClient(payload);
+                toast.success('Client created successfully!');
+                navigate('/clients');
+            }
         } catch {
             // error captured in apiError
         }
     };
+
+    if (isEdit && isLoadingInitial) {
+        return (
+            <div className="flex flex-col h-full bg-surface text-on-surface animate-pulse p-6">
+                <div className="h-4 w-32 bg-surface-container-high rounded mb-4" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="h-14 bg-surface-container-low rounded-xl" />
+                    <div className="h-14 bg-surface-container-low rounded-xl" />
+                    <div className="h-14 bg-surface-container-low rounded-xl" />
+                    <div className="h-14 bg-surface-container-low rounded-xl" />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -183,7 +233,7 @@ const ClientForm = () => {
                     ) : (
                         <>
                             <span className="material-symbols-outlined text-[18px]">save</span>
-                            Save Client
+                            {isEdit ? 'Update Client' : 'Save Client'}
                         </>
                     )}
                 </button>

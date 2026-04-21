@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-    MdChevronLeft, MdDelete, MdClose,
+    MdChevronLeft, MdDelete, MdClose, MdEdit,
     MdAttachMoney, MdCalendarToday, MdPerson, MdBusiness, MdStickyNote2,
     MdArrowDownward, MdArrowUpward
 } from "react-icons/md";
@@ -173,14 +173,21 @@ const TransactionDetails = () => {
                     )}
                 </div>
 
-                {/* Delete Action only — transactions are typically not edited */}
-                <div className="mt-5">
+                {/* Actions */}
+                <div className="md:flex md:justify-between gap-5 mt-5">
                     <button
                         onClick={() => setShowDeleteModal(true)}
                         className="error-btn w-full flex items-center justify-center gap-2"
                     >
                         <MdDelete className="text-[18px] md:text-[20px]" />
                         <span>Delete Transaction</span>
+                    </button>
+                    <button
+                        onClick={() => navigate(`/edit/transaction/${id}`)}
+                        className="primary-btn w-full mt-5 md:mt-0 flex items-center justify-center gap-2"
+                    >
+                        <MdEdit className="text-[18px] md:text-[20px]" />
+                        <span>Edit Transaction</span>
                     </button>
                 </div>
             </div>

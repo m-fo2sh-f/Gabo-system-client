@@ -198,7 +198,7 @@ const TaskDetails = () => {
                         <MdDelete className="text-[18px] md:text-[20px]" />
                         <span>Delete Task</span>
                     </button>
-                    <button onClick={() => navigate(`/add-new/task?edit=${id}`)} className="primary-btn w-full mt-5 md:mt-0 flex items-center justify-center gap-2">
+                    <button onClick={() => navigate(`/edit/task/${id}`)} className="primary-btn w-full mt-5 md:mt-0 flex items-center justify-center gap-2">
                         <MdEdit className="text-[18px] md:text-[20px]" />
                         <span>Edit Task</span>
                     </button>

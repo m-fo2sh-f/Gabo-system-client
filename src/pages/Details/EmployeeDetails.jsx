@@ -196,7 +196,7 @@ const EmployeeDetails = () => {
                         <span>Delete Employee</span>
                     </button>
                     <button
-                        onClick={() => navigate(`/add-new/employee?edit=${id}`)}
+                        onClick={() => navigate(`/edit/employee/${id}`)}
                         className="primary-btn w-full mt-5 md:mt-0 flex items-center justify-center gap-2"
                     >
                         <MdEdit className="text-[18px] md:text-[20px]" />

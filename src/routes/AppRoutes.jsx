@@ -67,6 +67,16 @@ const router = createBrowserRouter([
                 ],
             },
             {
+                path: '/edit',
+                element: <AddNewLayout />,
+                children: [
+                    { path: 'client/:id', element: <ClientForm /> },
+                    { path: 'employee/:id', element: <EmployeeForm /> },
+                    { path: 'task/:id', element: <TaskForm /> },
+                    { path: 'transaction/:id', element: <TransactionForm /> },
+                ],
+            },
+            {
                 path: '/details',
                 element: <DetailsLayout />,
                 children: [

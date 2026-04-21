@@ -1,17 +1,26 @@
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import Input from '../../components/common/input';
 import Select from '../../components/common/select';
 import { incomeCategoryOptions, expenseCategoryOptions, paymentMethodOptions } from '../../constants/FormConstants.jsx';
-import { useCreateTransaction } from '../../hooks/api/useTransactions';
+import { useCreateTransaction, useUpdateTransaction, useTransaction } from '../../hooks/api/useTransactions';
 import { useClients } from '../../hooks/api/useClients';
 import { useEmployees } from '../../hooks/api/useEmployees';
 import { useTasks } from '../../hooks/api/useTasks';
 
 const TransactionForm = () => {
+    const { id } = useParams();
+    const isEdit = !!id;
     const navigate = useNavigate();
-    const { mutateAsync: createTransaction, isPending, error: apiError } = useCreateTransaction();
+    
+    const { mutateAsync: createTransaction, isPending: isCreating, error: createError } = useCreateTransaction();
+    const { mutateAsync: updateTransaction, isPending: isUpdating, error: updateError } = useUpdateTransaction();
+    const { data: transactionData, isLoading: isLoadingInitial } = useTransaction(id);
+    
+    const isPending = isCreating || isUpdating;
+    const apiError = createError || updateError;
 
     const { data: clientsData } = useClients();
     const { data: employeesData } = useEmployees();
@@ -24,7 +33,7 @@ const TransactionForm = () => {
         label: `${t.client?.name ?? 'Task'} #${t.id}`
     }));
 
-    const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+    const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm({
         defaultValues: {
             type: 'income',
             category: '',
@@ -36,12 +45,33 @@ const TransactionForm = () => {
     const category = watch('category');
 
     useEffect(() => {
-        setValue('category', '');
-        setValue('client_id', '');
-        setValue('employee_id', '');
-        setValue('collector_id', '');
-        setValue('task_id', '');
-    }, [transactionType, setValue]);
+        // Only clear if not editing, to avoid overwriting initial data on first render
+        if (!isEdit) {
+            setValue('category', '');
+            setValue('client_id', '');
+            setValue('employee_id', '');
+            setValue('collector_id', '');
+            setValue('task_id', '');
+        }
+    }, [transactionType, setValue, isEdit]);
+
+    useEffect(() => {
+        if (isEdit && transactionData?.data) {
+            const data = transactionData.data;
+            reset({
+                type: data.type ?? 'income',
+                category: data.category ?? '',
+                amount: data.amount ?? '',
+                payment_method: data.payment_method ?? 'cash',
+                transaction_date: data.transaction_date ? data.transaction_date.split('T')[0] : '',
+                notes: data.notes ?? '',
+                client_id: data.client?.id ?? data.client_id ?? '',
+                employee_id: data.employee?.id ?? data.employee_id ?? '',
+                collector_id: data.collector?.id ?? data.collector_id ?? '',
+                task_id: data.task?.id ?? data.task_id ?? '',
+            });
+        }
+    }, [isEdit, transactionData, reset]);
 
     const onSubmit = async (data) => {
         try {
@@ -57,12 +87,34 @@ const TransactionForm = () => {
                 ...(data.collector_id && { collector_id: parseInt(data.collector_id) }),
                 ...(data.task_id && { task_id: parseInt(data.task_id) }),
             };
-            await createTransaction(payload);
-            navigate('/transactions');
+
+            if (isEdit) {
+                await updateTransaction({ id, ...payload });
+                toast.success('Transaction updated successfully!');
+                navigate(`/details/transaction/${id}`);
+            } else {
+                await createTransaction(payload);
+                toast.success('Transaction created successfully!');
+                navigate('/transactions');
+            }
         } catch {
             // captured in apiError
         }
     };
+
+    if (isEdit && isLoadingInitial) {
+        return (
+            <div className="flex flex-col h-full bg-surface text-on-surface animate-pulse p-6">
+                <div className="h-4 w-32 bg-surface-container-high rounded mb-4" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="h-14 bg-surface-container-low rounded-xl" />
+                    <div className="h-14 bg-surface-container-low rounded-xl" />
+                    <div className="h-14 bg-surface-container-low rounded-xl" />
+                    <div className="h-14 bg-surface-container-low rounded-xl" />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -196,7 +248,7 @@ const TransactionForm = () => {
                     ) : (
                         <>
                             <span className="material-symbols-outlined text-[18px]">save</span>
-                            Save Transaction
+                            {isEdit ? 'Update Transaction' : 'Save Transaction'}
                         </>
                     )}
                 </button>

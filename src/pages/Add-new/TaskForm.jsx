@@ -1,15 +1,25 @@
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import Input from '../../components/common/input';
 import Select from '../../components/common/select';
 import { taskTypeOptions, taskStatusOptions } from '../../constants/FormConstants.jsx';
-import { useCreateTask } from '../../hooks/api/useTasks';
+import { useCreateTask, useUpdateTask, useTask } from '../../hooks/api/useTasks';
 import { useClients } from '../../hooks/api/useClients';
 import { useEmployees } from '../../hooks/api/useEmployees';
 
 const TaskForm = () => {
+    const { id } = useParams();
+    const isEdit = !!id;
     const navigate = useNavigate();
-    const { mutateAsync: createTask, isPending, error: apiError } = useCreateTask();
+    
+    const { mutateAsync: createTask, isPending: isCreating, error: createError } = useCreateTask();
+    const { mutateAsync: updateTask, isPending: isUpdating, error: updateError } = useUpdateTask();
+    const { data: taskData, isLoading: isLoadingInitial } = useTask(id);
+    
+    const isPending = isCreating || isUpdating;
+    const apiError = createError || updateError;
 
     const { data: clientsData, isLoading: clientsLoading } = useClients();
     const { data: employeesData, isLoading: employeesLoading } = useEmployees();
@@ -20,6 +30,7 @@ const TaskForm = () => {
     const {
         register,
         handleSubmit,
+        reset,
         formState: { errors }
     } = useForm({
         defaultValues: {
@@ -27,6 +38,23 @@ const TaskForm = () => {
             status: 'pending',
         }
     });
+
+    useEffect(() => {
+        if (isEdit && taskData?.data) {
+            const data = taskData.data;
+            reset({
+                client_id: data.client?.id ?? data.client_id ?? '',
+                employee_id: data.employee?.id ?? data.employee_id ?? '',
+                task_type: data.task_type?.name ?? data.task_type ?? '',
+                status: data.status ?? 'pending',
+                start_date: data.start_date ? data.start_date.split('T')[0] : '',
+                end_date: data.end_date ? data.end_date.split('T')[0] : '',
+                price: data.price ?? '',
+                cost: data.cost ?? 0,
+                notes: data.notes ?? '',
+            });
+        }
+    }, [isEdit, taskData, reset]);
 
     const onSubmit = async (data) => {
         try {
@@ -41,12 +69,34 @@ const TaskForm = () => {
                 ...(data.end_date && { end_date: data.end_date }),
                 ...(data.notes && { notes: data.notes }),
             };
-            await createTask(payload);
-            navigate('/tasks');
+
+            if (isEdit) {
+                await updateTask({ id, ...payload });
+                toast.success('Task updated successfully!');
+                navigate(`/details/task/${id}`);
+            } else {
+                await createTask(payload);
+                toast.success('Task created successfully!');
+                navigate('/tasks');
+            }
         } catch {
             // captured in apiError
         }
     };
+
+    if (isEdit && isLoadingInitial) {
+        return (
+            <div className="flex flex-col h-full bg-surface text-on-surface animate-pulse p-6">
+                <div className="h-4 w-32 bg-surface-container-high rounded mb-4" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="h-14 bg-surface-container-low rounded-xl" />
+                    <div className="h-14 bg-surface-container-low rounded-xl" />
+                    <div className="h-14 bg-surface-container-low rounded-xl" />
+                    <div className="h-14 bg-surface-container-low rounded-xl" />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -152,7 +202,7 @@ const TaskForm = () => {
                     ) : (
                         <>
                             <span className="material-symbols-outlined text-[18px]">save</span>
-                            Save Task
+                            {isEdit ? 'Update Task' : 'Save Task'}
                         </>
                     )}
                 </button>

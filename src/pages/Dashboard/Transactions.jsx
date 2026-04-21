@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Input from '../../components/common/input';
-import { MdKeyboardArrowRight, MdKeyboardArrowLeft, MdArrowDownward, MdArrowUpward } from "react-icons/md";
+import { MdKeyboardArrowRight, MdKeyboardArrowLeft, MdArrowDownward, MdArrowUpward, MdEdit } from "react-icons/md";
 import { IoSearchSharp } from "react-icons/io5";
 import { useNavigate } from 'react-router-dom';
 import { useTransactions } from '../../hooks/api/useTransactions';
@@ -101,6 +101,7 @@ const Transactions = () => {
                                 <th className="pb-4 font-medium">Type</th>
                                 <th className="pb-4 font-medium hidden md:table-cell">Payment Method</th>
                                 <th className="pb-4 font-medium hidden sm:table-cell">Date</th>
+                                <th className="pb-4 font-medium text-center">Actions</th>
                                 <th className="pb-4 font-medium text-right pr-2">Amount</th>
                             </tr>
                         </thead>
@@ -138,13 +139,25 @@ const Transactions = () => {
                                             ? new Date(trx.transaction_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                                             : '—'}
                                     </td>
+                                    <td className="py-4 border-b border-surface-container-high/50 text-center">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigate(`/edit/transaction/${trx.id}`);
+                                            }}
+                                            className="p-1.5 rounded-lg text-on-surface-variant hover:text-primary hover:bg-primary/10 transition-colors"
+                                            title="Edit Transaction"
+                                        >
+                                            <MdEdit className="text-[18px]" />
+                                        </button>
+                                    </td>
                                     <td className={`py-4 text-right pr-2 font-medium font-headline text-base border-b border-surface-container-high/50 ${trx.type === 'income' ? 'text-emerald-600' : 'text-error'}`}>
                                         {trx.type === 'income' ? '+' : '-'}${parseFloat(trx.amount ?? 0).toLocaleString()}
                                     </td>
                                 </tr>
                             )) : (
                                 <tr>
-                                    <td colSpan="5" className="py-12 text-center text-on-surface-variant">
+                                    <td colSpan="6" className="py-12 text-center text-on-surface-variant">
                                         <div className="flex flex-col items-center gap-2">
                                             <span className="material-symbols-outlined text-[40px] text-outline">receipt_long</span>
                                             <p>No transactions found matching your search.</p>
