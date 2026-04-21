@@ -3,60 +3,61 @@ import Input from '../../components/common/input';
 import { MdKeyboardArrowRight, MdKeyboardArrowLeft } from "react-icons/md";
 import { IoSearchSharp } from "react-icons/io5";
 import { useNavigate } from 'react-router-dom';
-const mockEmployees = [
-    {
-        id: 1,
-        name: "Emily Chen",
-        job_title: "Senior Media Buyer",
-        is_freelance: false,
-        employee_status: "active",
-        revenue: "$145,200",
-        avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBqkcs30pmcmn8-ER1IrBeLLSsXC-FPJRAmWHrkAHv4ea2BKGIf4ZZH66Folor89IqZGX3VINbbxpZYRpgvKyYWk1Z2gC3pnCor2R887R-kgt2LgQDmwM92UKHtQ7oLvwOWOq98vhNI4qCqpmyJQcF5rDO_x9qqo7F5KdBPH4TrA81nxK5uT9iyDVEjJB_MlOE3mKAMuRJYf3xdMScG5Ansiyiitl23R4xIaZ4nYtztrKAwZJ1KzG265Shn2n9irocOBPFxU9GmmZs"
-    },
-    {
-        id: 2,
-        name: "John Doe",
-        job_title: "Creative Strategist",
-        is_freelance: true,
-        employee_status: "active",
-        revenue: "$82,500",
-        avatar: null
-    },
-    {
-        id: 3,
-        name: "Marcus Johnson",
-        job_title: "Ad Operations Lead",
-        is_freelance: false,
-        employee_status: "active",
-        revenue: "$210,000",
-        avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBC_vk2it4eU0YQJ6JZq-aob7NBRd1CnSSri1bBLP4_u8yhHYG9Woe-W1V-8iGwC9WqbO_BToifjj9yV37knXA-Ifp3AOApqoOXAABItfocxLcFm8qT9b1XtaPn484vKViOyiA5bo6Z55RxzcWjduayPJkKkZxL1ML1hMHgiqdeJCOuV7hxBnK1yhVhgkCdtZFVGPgGHAo-ws2WZOsCWzX_V9kuF0vTeQhgojWiSrUr6hiriHZtTwNekodmBM-VmNkilGZAAvOQ24Y"
-    }
-];
+import { useEmployees } from '../../hooks/api/useEmployees';
 
 const Employees = () => {
     const [search, setSearch] = useState('');
     const [filterType, setFilterType] = useState('all');
     const navigate = useNavigate();
 
-    // Filter Logic
-    const filteredEmployees = mockEmployees.filter(emp => {
-        const matchesSearch = emp.name.toLowerCase().includes(search.toLowerCase()) ||
-            emp.job_title.toLowerCase().includes(search.toLowerCase());
+    const filters = {};
+    if (search) filters.search = search;
+    if (filterType !== 'all') filters.employment_type = filterType;
 
-        let matchesType = true;
-        if (filterType === 'freelance') matchesType = emp.is_freelance === true;
-        if (filterType === 'full-time') matchesType = emp.is_freelance === false;
+    const { data, isLoading, isError, error } = useEmployees(filters);
+    const employees = data?.data ?? [];
 
-        return matchesSearch && matchesType;
-    });
-
-    const getTypeDisplay = (isFreelance) => {
+    const getTypeDisplay = (employmentType) => {
+        const isFreelance = employmentType === 'freelance';
         return isFreelance ? (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border border-outline-variant/40 text-secondary bg-surface">Freelance</span>
         ) : (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-container-high text-on-surface-variant">Full-time</span>
         );
     };
+
+    const getStatusDot = (status) => {
+        switch (status) {
+            case 'active': return 'bg-emerald-500';
+            case 'paused': return 'bg-amber-400';
+            case 'stopped': return 'bg-error';
+            default: return 'bg-outline';
+        }
+    };
+
+    const renderSkeletonRows = () =>
+        Array.from({ length: 4 }).map((_, i) => (
+            <tr key={i} className="animate-pulse">
+                <td className="py-4 pl-2 border-b border-surface-container-high/50">
+                    <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-surface-container-high" />
+                        <div className="space-y-2">
+                            <div className="h-3 w-32 bg-surface-container-high rounded" />
+                            <div className="h-2 w-20 bg-surface-container-high rounded" />
+                        </div>
+                    </div>
+                </td>
+                <td className="py-4 border-b border-surface-container-high/50 hidden sm:table-cell">
+                    <div className="h-3 w-28 bg-surface-container-high rounded" />
+                </td>
+                <td className="py-4 border-b border-surface-container-high/50 hidden md:table-cell">
+                    <div className="h-5 w-16 bg-surface-container-high rounded-full" />
+                </td>
+                <td className="py-4 text-right pr-2 border-b border-surface-container-high/50">
+                    <div className="h-3 w-16 bg-surface-container-high rounded ml-auto" />
+                </td>
+            </tr>
+        ));
 
     return (
         <div className="space-y-6">
@@ -74,7 +75,7 @@ const Employees = () => {
                             onChange={(e) => setFilterType(e.target.value)}
                         >
                             <option value="all">All Types</option>
-                            <option value="full-time">Full-time</option>
+                            <option value="full_time">Full-time</option>
                             <option value="freelance">Freelance</option>
                         </select>
 
@@ -91,6 +92,13 @@ const Employees = () => {
                     </div>
                 </div>
 
+                {/* Error State */}
+                {isError && (
+                    <div className="rounded-lg bg-error/10 border border-error/20 text-error text-sm px-4 py-3 mb-6">
+                        Failed to load employees: {error?.response?.data?.message ?? error?.message}
+                    </div>
+                )}
+
                 {/* Employees Table */}
                 <div className="w-full overflow-x-auto">
                     <table className="w-full text-left border-collapse">
@@ -99,55 +107,68 @@ const Employees = () => {
                                 <th className="pb-4 font-medium pl-2">Employee Details</th>
                                 <th className="pb-4 font-medium hidden sm:table-cell">Job Title</th>
                                 <th className="pb-4 font-medium hidden md:table-cell">Type</th>
-                                <th className="pb-4 font-medium text-right pr-2">Revenue</th>
+                                <th className="pb-4 font-medium text-right pr-2">Status</th>
                             </tr>
                         </thead>
                         <tbody className="font-body text-sm text-on-surface">
-                            {filteredEmployees.length > 0 ? filteredEmployees.map((emp) => (
+                            {isLoading ? renderSkeletonRows() : employees.length > 0 ? employees.map((emp) => (
                                 <tr key={emp.id} onClick={() => navigate(`/details/employee/${emp.id}`)} className="hover:bg-surface-container-high/30 transition-colors group cursor-pointer" title="Click to view full profile">
                                     <td className="py-4 pl-2 border-b border-surface-container-high/50">
                                         <div className="flex items-center gap-3">
-
+                                            <div className="w-9 h-9 rounded-full bg-surface-container-highest flex items-center justify-center text-xs font-semibold text-secondary shrink-0 border border-outline-variant/20">
+                                                {emp.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                                            </div>
                                             <div className="flex flex-col">
                                                 <span className="font-semibold text-on-surface group-hover:text-primary transition-colors">{emp.name}</span>
-                                                <span className="text-xs text-on-surface-variant sm:hidden mt-0.5">{emp.job_title}</span>
+                                                <span className="text-xs text-on-surface-variant sm:hidden mt-0.5">{emp.job_title?.name ?? emp.job_title}</span>
                                                 <div className="md:hidden mt-1 opacity-80 scale-90 origin-left">
-                                                    {getTypeDisplay(emp.is_freelance)}
+                                                    {getTypeDisplay(emp.employment_type)}
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="py-4 text-secondary border-b border-surface-container-high/50 hidden sm:table-cell">{emp.job_title}</td>
+                                    <td className="py-4 text-secondary border-b border-surface-container-high/50 hidden sm:table-cell">{emp.job_title?.name ?? emp.job_title ?? '—'}</td>
                                     <td className="py-4 border-b border-surface-container-high/50 hidden md:table-cell">
-                                        {getTypeDisplay(emp.is_freelance)}
+                                        {getTypeDisplay(emp.employment_type)}
                                     </td>
-                                    <td className="py-4 text-right pr-2 font-medium font-headline text-base border-b border-surface-container-high/50">
-                                        {emp.revenue}
+                                    <td className="py-4 text-right pr-2 border-b border-surface-container-high/50">
+                                        <div className="flex items-center justify-end gap-1.5">
+                                            <div className={`w-2 h-2 rounded-full ${getStatusDot(emp.employee_status)}`} />
+                                            <span className="capitalize text-sm">{emp.employee_status ?? '—'}</span>
+                                        </div>
                                     </td>
                                 </tr>
                             )) : (
                                 <tr>
-                                    <td colSpan="4" className="py-8 text-center text-on-surface-variant">No employees found matching your search.</td>
+                                    <td colSpan="4" className="py-12 text-center text-on-surface-variant">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <span className="material-symbols-outlined text-[40px] text-outline">person_search</span>
+                                            <p>No employees found matching your search.</p>
+                                        </div>
+                                    </td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
                 </div>
 
-                {/* Pagination */}
-                <div className="flex items-center justify-between pt-6 mt-2">
-                    <span className="text-sm text-on-surface-variant">Showing <span className="font-medium text-on-surface">1</span> to <span className="font-medium text-on-surface">{filteredEmployees.length}</span> of <span className="font-medium text-on-surface">{mockEmployees.length}</span> members</span>
-                    <div className="flex items-center gap-1">
-                        <button className="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                            <span className="material-symbols-outlined text-[20px]"><MdKeyboardArrowLeft /></span>
-                        </button>
-                        <button className="w-8 h-8 rounded-lg bg-primary text-on-primary text-sm font-medium flex items-center justify-center">1</button>
-                        <button className="w-8 h-8 rounded-lg text-on-surface hover:bg-surface-container-high text-sm font-medium flex items-center justify-center transition-colors">2</button>
-                        <button className="p-2 rounded-lg text-on-surface hover:bg-surface-container-high transition-colors">
-                            <span className="material-symbols-outlined text-[20px]"><MdKeyboardArrowRight /></span>
-                        </button>
+                {/* Footer */}
+                {!isLoading && !isError && (
+                    <div className="flex items-center justify-between pt-6 mt-2">
+                        <span className="text-sm text-on-surface-variant">
+                            Showing <span className="font-medium text-on-surface">{employees.length}</span> member{employees.length !== 1 ? 's' : ''}
+                        </span>
+                        <div className="flex items-center gap-1">
+                            <button className="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <MdKeyboardArrowLeft className="text-[20px]" />
+                            </button>
+                            <button className="w-8 h-8 rounded-lg bg-primary text-on-primary text-sm font-medium flex items-center justify-center">1</button>
+                            <button className="p-2 rounded-lg text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <MdKeyboardArrowRight className="text-[20px]" />
+                            </button>
+                        </div>
                     </div>
-                </div>
+                )}
             </section>
         </div>
     );

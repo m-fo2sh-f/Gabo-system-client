@@ -1,52 +1,121 @@
 import { useState } from 'react';
-import { MdChevronLeft, MdDelete, MdEdit, MdCall, MdBadge, MdPublic, MdTag, MdAlternateEmail, MdLink, MdStickyNote2, MdWorkHistory } from "react-icons/md";
-import { Link, useParams } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
+import {
+    MdChevronLeft, MdDelete, MdEdit, MdCall,
+    MdBadge, MdStickyNote2, MdWorkHistory, MdClose, MdCheck
+} from "react-icons/md";
+import { useNavigate, useParams } from 'react-router-dom';
+import { useEmployee, useDeleteEmployee } from '../../hooks/api/useEmployees';
+
 const EmployeeDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const handleDelete = () => {
-        setShowDeleteModal(false);
-    }
-    return (
-        <div className="flex flex-col h-full bg-surface text-on-surface ">
-            {/* Header */}
-            <div className="p-4 md:p-8 max-w-7xl mx-auto w-full flex-1 flex flex-col ">
 
+    const { data, isLoading, isError, error } = useEmployee(id);
+    const employee = data?.data ?? data;
+
+    const { mutateAsync: deleteEmployee, isPending: isDeleting } = useDeleteEmployee();
+
+    const handleDelete = async () => {
+        try {
+            await deleteEmployee(id);
+            navigate('/employees');
+        } catch {
+            setShowDeleteModal(false);
+        }
+    };
+
+    const getStatusStyle = (status) => {
+        switch (status) {
+            case 'active': return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
+            case 'paused': return 'bg-amber-400/10 text-amber-600 border-amber-400/20';
+            case 'stopped': return 'bg-error/10 text-error border-error/20';
+            default: return 'bg-surface-container-high text-on-surface-variant border-outline-variant/20';
+        }
+    };
+
+    const getStatusDot = (status) => {
+        switch (status) {
+            case 'active': return 'bg-emerald-500';
+            case 'paused': return 'bg-amber-400';
+            case 'stopped': return 'bg-error';
+            default: return 'bg-outline';
+        }
+    };
+
+    const initials = employee?.name
+        ? employee.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+        : '??';
+
+    if (isLoading) {
+        return (
+            <div className="flex flex-col h-full bg-surface text-on-surface animate-pulse">
+                <div className="px-4 md:px-8 max-w-7xl mx-auto w-full flex-1 flex flex-col mt-8 gap-6">
+                    <div className="h-10 w-36 bg-surface-container-high rounded-xl ml-auto" />
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                        <div className="md:col-span-4 bg-surface-container-low rounded-xl p-8 h-64" />
+                        <div className="md:col-span-8 grid grid-cols-2 gap-6">
+                            <div className="bg-surface-container-low rounded-xl h-48" />
+                            <div className="bg-surface-container-low rounded-xl h-48" />
+                        </div>
+                        <div className="md:col-span-12 bg-surface-container-low rounded-xl h-32" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (isError) {
+        return (
+            <div className="flex flex-col items-center justify-center h-full gap-4 text-on-surface-variant">
+                <span className="material-symbols-outlined text-[60px] text-error/50">error</span>
+                <p className="text-lg font-medium">Failed to load employee</p>
+                <p className="text-sm text-error">{error?.response?.data?.message ?? error?.message}</p>
+                <button onClick={() => navigate('/employees')} className="primary-btn mt-2">
+                    <MdChevronLeft /> Back to Employees
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex flex-col h-full bg-surface text-on-surface">
+            <div className="p-4 md:p-8 max-w-7xl mx-auto w-full flex-1 flex flex-col">
+                {/* Back button */}
                 <div>
                     <button
                         onClick={() => navigate(-1)}
-
-                        className="primary-btn w-full md:w-40 md:float-right mt-5">
+                        className="primary-btn w-full md:w-40 md:float-right mt-5"
+                    >
                         <MdChevronLeft className="text-[18px] md:text-[20px]" />
-                        <span className="hidden sm:inline">Back</span>
-                        <span className="sm:hidden">Back</span>
+                        <span>Back</span>
                     </button>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 mt-5">
 
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 mt-5">
                     {/* Profile Card */}
                     <div className="md:col-span-4 bg-surface-container-low rounded-xl p-6 md:p-8 ghost-border flex flex-col items-center text-center">
                         <div className="w-24 h-24 rounded-full bg-surface-container-highest mb-6 overflow-hidden ghost-border shadow-[0_10px_20px_rgba(19,27,46,0.03)] flex items-center justify-center text-3xl font-headline font-bold text-secondary">
-                            EC
+                            {initials}
                         </div>
-                        <h2 className="font-headline text-2xl font-bold text-on-surface mb-2">Emily Chen</h2>
-                        <p className="font-body text-on-surface-variant text-sm mb-6">Senior Frontend Developer</p>
+                        <h2 className="font-headline text-2xl font-bold text-on-surface mb-1">{employee?.name}</h2>
+                        <p className="font-body text-on-surface-variant text-sm mb-6">
+                            {employee?.job_title?.name ?? employee?.job_title ?? 'No Job Title'}
+                        </p>
                         <div className="flex flex-wrap items-center justify-center gap-2">
-                            <div className="px-4 py-1.5 bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 rounded-full font-label text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                Active
+                            <div className={`px-4 py-1.5 border rounded-full font-label text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 ${getStatusStyle(employee?.employee_status)}`}>
+                                <span className={`w-2 h-2 rounded-full ${getStatusDot(employee?.employee_status)}`} />
+                                {employee?.employee_status ?? 'Unknown'}
                             </div>
-                            <div className="px-4 py-1.5 bg-secondary-container/40 text-on-secondary-container border border-secondary-container rounded-full font-label text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5">
-                                Full-Time
+                            <div className="px-4 py-1.5 bg-secondary-container/40 text-on-secondary-container border border-secondary-container rounded-full font-label text-xs font-semibold uppercase tracking-wider">
+                                {employee?.employment_type === 'freelance' ? 'Freelance' : 'Full-Time'}
                             </div>
                         </div>
                     </div>
 
-                    {/* Bento Grid Middle Section */}
+                    {/* Bento Grid Middle */}
                     <div className="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
-                        {/* Personal Info Card */}
+                        {/* Personal Info */}
                         <div className="bg-surface-container-low rounded-xl p-6 md:p-8 ghost-border flex flex-col justify-between">
                             <div>
                                 <h3 className="font-label text-sm text-on-surface-variant uppercase tracking-wider mb-6">Personal Info</h3>
@@ -56,7 +125,7 @@ const EmployeeDetails = () => {
                                     </div>
                                     <div>
                                         <p className="font-label text-xs text-on-surface-variant mb-1">Phone Number</p>
-                                        <p className="font-body text-on-surface font-medium">+1 (555) 987-6543</p>
+                                        <p className="font-body text-on-surface font-medium">{employee?.phone ?? '—'}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-4">
@@ -64,116 +133,108 @@ const EmployeeDetails = () => {
                                         <MdBadge className="text-primary text-[20px]" />
                                     </div>
                                     <div>
-                                        <p className="font-label text-xs text-on-surface-variant mb-1">National ID</p>
-                                        <p className="font-body text-on-surface font-medium tracking-wide">123-456-7890</p>
+                                        <p className="font-label text-xs text-on-surface-variant mb-1">Job Title</p>
+                                        <p className="font-body text-on-surface font-medium">
+                                            {employee?.job_title?.name ?? employee?.job_title ?? '—'}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Employment Details Card */}
+                        {/* Employment Details */}
                         <div className="bg-surface-container-low rounded-xl p-6 md:p-8 ghost-border flex flex-col justify-between relative overflow-hidden">
-                            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-2xl pointer-events-none"></div>
-                            <h3 className="font-label text-sm text-on-surface-variant uppercase tracking-wider mb-6 relative z-10">Employment Details</h3>
-                            <div className="mb-6 relative z-10">
-                                <p className="font-label text-xs text-on-surface-variant mb-1">Monthly Salary</p>
-                                <p className="font-headline text-4xl font-extrabold text-primary">$4,500</p>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4 relative z-10">
-                                <div>
-                                    <p className="font-label text-xs text-on-surface-variant mb-1">Start Date</p>
-                                    <p className="font-body text-on-surface font-medium">Mar 15, 2022</p>
-                                </div>
-                                <div>
-                                    <p className="font-label text-xs text-on-surface-variant mb-1"></p>
-                                    <p className="font-body text-on-surface font-medium"></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* profit from thhis Employee */}
-                    <div className="md:col-span-12 bg-surface-container-low rounded-xl p-6 md:p-8 ghost-border flex flex-col justify-between relative overflow-hidden">
-                        <h3 className="font-label text-sm text-on-surface-variant uppercase tracking-wider mb-6 relative z-10">Profit from this Emily</h3>
-                        <div className="grid grid-cols-3 gap-4 relative z-10">
-                            <div>
-                                <p className="font-label text-xs text-on-surface-variant mb-1">Income</p>
-                                <p className="font-body text-on-surface font-medium">$45,500</p>
-                            </div>
-                            <div>
-                                <p className="font-label text-xs text-on-surface-variant mb-1">Tasks Completed</p>
-                                <p className="font-body text-on-surface font-medium">15 Tasks</p>
-                            </div>
-                            <div>
-                                <p className="font-label text-xs text-on-surface-variant mb-1">Clients </p>
-                                <p className="font-body text-on-surface font-medium">3 Clients</p>
-                            </div>
-                        </div>
-                    </div>
-
-
-
-
-                    {/* Social Links Card */}
-                    <div className="md:col-span-12 bg-surface-container-low rounded-xl p-6 ghost-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                        <span className="font-label text-sm text-on-surface-variant uppercase tracking-wider">Digital Presence</span>
-                        <div className="flex flex-wrap gap-4">
-                            <button title="Facebook" className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-surface hover:bg-surface-container-highest transition-colors flex items-center justify-center text-on-surface ghost-border">
-                                <MdPublic className="text-[20px]" />
-                            </button>
-                            <button title="Instagram" className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-surface hover:bg-surface-container-highest transition-colors flex items-center justify-center text-on-surface ghost-border">
-                                <MdTag className="text-[20px]" />
-                            </button>
-                            <button title="Portfolio" className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-surface hover:bg-surface-container-highest transition-colors flex items-center justify-center text-on-surface ghost-border">
-                                <MdLink className="text-[20px]" />
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Notes / Activity */}
-                    <div className="md:col-span-12 bg-surface-container-low rounded-xl p-6 md:p-8 ghost-border">
-                        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-6">
-                            <h3 className="font-label text-sm text-on-surface-variant uppercase tracking-wider flex items-center gap-2">
-                                <MdWorkHistory className="text-[18px]" />
-                                Recent Activity & Notes
+                            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-2xl pointer-events-none" />
+                            <h3 className="font-label text-sm text-on-surface-variant uppercase tracking-wider mb-4 relative z-10">
+                                Employment Details
                             </h3>
-                            <span className="text-xs text-on-surface-variant">Last updated: 1 week ago</span>
-                        </div>
-                        <div className="bg-surface rounded-lg p-6 ghost-border min-h-[120px]">
-                            <p className="font-body text-sm text-on-surface leading-relaxed whitespace-pre-wrap">
-                                Emily successfully led the frontend migration to React 19 and implemented the new Tailwind V4 design system.
-                                Upcoming performance review is scheduled for next month. Consider a bonus related to the Acme Corp delivery milestone.
-                            </p>
+                            <div className="mb-4 relative z-10">
+                                {employee?.employment_type === 'freelance' ? (
+                                    <>
+                                        <p className="font-label text-xs text-on-surface-variant mb-1">Commission Rate</p>
+                                        <p className="font-headline text-4xl font-extrabold text-primary">
+                                            {employee?.commission_rate ?? 0}%
+                                        </p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <p className="font-label text-xs text-on-surface-variant mb-1">Monthly Salary</p>
+                                        <p className="font-headline text-4xl font-extrabold text-primary">
+                                            ${parseFloat(employee?.base_salary ?? 0).toLocaleString()}
+                                        </p>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
 
+                    {/* Notes */}
+                    {employee?.notes && (
+                        <div className="md:col-span-12 bg-surface-container-low rounded-xl p-6 md:p-8 ghost-border">
+                            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-6">
+                                <h3 className="font-label text-sm text-on-surface-variant uppercase tracking-wider flex items-center gap-2">
+                                    <MdWorkHistory className="text-[18px]" />
+                                    Notes
+                                </h3>
+                            </div>
+                            <div className="bg-surface rounded-lg p-6 ghost-border min-h-[100px]">
+                                <p className="font-body text-sm text-on-surface leading-relaxed whitespace-pre-wrap">
+                                    {employee.notes}
+                                </p>
+                            </div>
+                        </div>
+                    )}
                 </div>
-                <div className='  md:flex md:justify-between gap-5'>
-                    {/* delete Button */}
-                    <button onClick={() => { setShowDeleteModal(true) }} className='error-btn w-full  mt-5  flex items-center justify-center' >
+
+                {/* Actions */}
+                <div className="md:flex md:justify-between gap-5 mt-5">
+                    <button
+                        onClick={() => setShowDeleteModal(true)}
+                        className="error-btn w-full mt-0 flex items-center justify-center gap-2"
+                    >
                         <MdDelete className="text-[18px] md:text-[20px]" />
-                        <span className="hidden sm:inline">Delete </span>
-                        <span className="sm:hidden">Delete</span>
+                        <span>Delete Employee</span>
                     </button>
-
-                    {/* edit Button */}
-                    <button className='primary-btn w-full  mt-5  flex items-center justify-center' >
+                    <button
+                        onClick={() => navigate(`/add-new/employee?edit=${id}`)}
+                        className="primary-btn w-full mt-5 md:mt-0 flex items-center justify-center gap-2"
+                    >
                         <MdEdit className="text-[18px] md:text-[20px]" />
-                        <span className="hidden sm:inline">Edit </span>
-                        <span className="sm:hidden">Edit</span>
+                        <span>Edit Employee</span>
                     </button>
                 </div>
-
             </div>
 
-            {/* delete confirmation model */}
-            <div className={`${showDeleteModal ? 'fixed' : 'hidden'} inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50`}>
-                <div className="bg-surface rounded-xl p-6 md:p-8 ghost-border w-full max-w-md">
-                    <h3 className="font-label text-xl font-bold text-on-surface mb-4">Delete Transaction</h3>
-                    <p className="font-body text-on-surface-variant mb-6">Are you sure you want to delete this transaction?</p>
+            {/* Delete Confirmation Modal */}
+            <div className={`${showDeleteModal ? 'fixed' : 'hidden'} inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4`}>
+                <div className="bg-surface rounded-xl p-6 md:p-8 ghost-border w-full max-w-md shadow-xl">
+                    <h3 className="font-label text-xl font-bold text-on-surface mb-2">Delete Employee</h3>
+                    <p className="font-body text-on-surface-variant mb-2">
+                        Are you sure you want to delete <span className="font-semibold text-on-surface">{employee?.name}</span>?
+                    </p>
+                    <p className="text-xs text-error/70 mb-6">This action cannot be undone.</p>
                     <div className="flex gap-4">
-                        <button onClick={() => { setShowDeleteModal(false) }} className="primary-btn flex-1">Cancel</button>
-                        <button onClick={() => { handleDelete() }} className="error-btn flex-1 ">Delete</button>
+                        <button
+                            onClick={() => setShowDeleteModal(false)}
+                            className="primary-btn flex-1"
+                            disabled={isDeleting}
+                        >
+                            <MdClose /> Cancel
+                        </button>
+                        <button
+                            onClick={handleDelete}
+                            className="error-btn flex-1 flex items-center justify-center gap-2"
+                            disabled={isDeleting}
+                        >
+                            {isDeleting ? (
+                                <>
+                                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    Deleting...
+                                </>
+                            ) : (
+                                <><MdDelete /> Delete</>
+                            )}
+                        </button>
                     </div>
                 </div>
             </div>
