@@ -3,75 +3,58 @@ import Input from '../../components/common/input';
 import { MdKeyboardArrowRight, MdKeyboardArrowLeft } from "react-icons/md";
 import { IoSearchSharp } from "react-icons/io5";
 import { useNavigate } from 'react-router-dom';
-const mockClients = [
-    {
-        id: 1,
-        brand_name: "Acme Corp",
-        name: "Sarah Jenkins",
-        payment_cycle: "monthly",
-        contract_start_date: "Oct 15, 2023",
-        status: "active",
-        logo: "https://lh3.googleusercontent.com/aida-public/AB6AXuBPPsqq7HcPgd0LQ6YMYl6wZcNYi9hOGR4HaCguxDf1-uwYXjBIU4KfyhhDF7jby3pTMRsadvfk38_yIIBrd-4B4GqlY7wmgwVLUj62ihwtDDrAOrCmn_7Z9KJ4GghABDh90ErF-k2M_FEExw2dhAAMXKB5dHgM_SoKDf1eTmetb2Rvn58O1ncDLv8qV4iwKjDTzPMwJ6c7tjySXhvW0isHOjlJKYljXGfPbnPIShx1Z5vij_qXXbMdGUjSLfYxLkkdVIzzPLvoIXc"
-    },
-    {
-        id: 2,
-        brand_name: "Globex Innovations",
-        name: "Michael Chang",
-        payment_cycle: "weakly",
-        contract_start_date: "Oct 06, 2023",
-        status: "paused",
-        logo: "https://lh3.googleusercontent.com/aida-public/AB6AXuAVf_2UaHCNy3FxY1egZDf5eUkiEap0B7tNjNDj1OxvGr0-07UvHmn9q4YUgyzFwLed3p_bbnOJueQw8Y73G4cy24nMM5sdUEO-gd6KCiTAuCiUzUjL1aQIxULZrCkcvAEypaDt1ryJq3kuAPbFO1E8WxqMWIBu0nOoINPoKOr610UD0qvzGtq9EJCCYF1RVKUOwMExT110omLMq9vidfpcLFacWZpU-h196H4R6-icq7fhdoUf5hpojf8tAEQXnSpeYQkOfN7ZJfQ"
-    },
-    {
-        id: 3,
-        brand_name: "Initech Solutions",
-        name: "David R.",
-        payment_cycle: "once",
-        contract_start_date: "Oct 02, 2023",
-        status: "stopped",
-        logo: "https://lh3.googleusercontent.com/aida-public/AB6AXuAoCO535mSScJQ2GrRa3oedmoVZFbFRACN1GRf5oaH-ydLEE0-vS7foBn17RYtIwjt9OQ1GICWnGd5d2lcAMtvg7O5WP_8oenpDoxYsLo5GQJWlIpAs05aKKjgKufxNfz_tRyAGoqHiBKHO04KBu0UwnQ7pk_3qVhYXJa3ncut0WLjpzBhGgLeMFcIzu8lODAtL_kDV0zP1su4f-r2IJuehuCSgFVGGUZbxrV6H3Qqz91dWs3XKRgjNraaT8WMDkUZMNyEt3erBCiQ"
-    },
-    {
-        id: 5,
-        brand_name: "Initech Solutions",
-        name: "David R.",
-        payment_cycle: "once",
-        contract_start_date: "Oct 02, 2023",
-        status: "stopped",
-        logo: "https://lh3.googleusercontent.com/aida-public/AB6AXuAoCO535mSScJQ2GrRa3oedmoVZFbFRACN1GRf5oaH-ydLEE0-vS7foBn17RYtIwjt9OQ1GICWnGd5d2lcAMtvg7O5WP_8oenpDoxYsLo5GQJWlIpAs05aKKjgKufxNfz_tRyAGoqHiBKHO04KBu0UwnQ7pk_3qVhYXJa3ncut0WLjpzBhGgLeMFcIzu8lODAtL_kDV0zP1su4f-r2IJuehuCSgFVGGUZbxrV6H3Qqz91dWs3XKRgjNraaT8WMDkUZMNyEt3erBCiQ"
-    },
-    {
-        id: 6,
-        brand_name: "Initech Solutions",
-        name: "David R.",
-        payment_cycle: "once",
-        contract_start_date: "Oct 02, 2023",
-        status: "stopped",
-        logo: "https://lh3.googleusercontent.com/aida-public/AB6AXuAoCO535mSScJQ2GrRa3oedmoVZFbFRACN1GRf5oaH-ydLEE0-vS7foBn17RYtIwjt9OQ1GICWnGd5d2lcAMtvg7O5WP_8oenpDoxYsLo5GQJWlIpAs05aKKjgKufxNfz_tRyAGoqHiBKHO04KBu0UwnQ7pk_3qVhYXJa3ncut0WLjpzBhGgLeMFcIzu8lODAtL_kDV0zP1su4f-r2IJuehuCSgFVGGUZbxrV6H3Qqz91dWs3XKRgjNraaT8WMDkUZMNyEt3erBCiQ"
-    }
-];
+import { useClients } from '../../hooks/api/useClients';
 
 const Clients = () => {
     const navigate = useNavigate();
     const [search, setSearch] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
 
-    // Filter Logic
-    const filteredClients = mockClients.filter(client => {
-        const matchesSearch = client.brand_name.toLowerCase().includes(search.toLowerCase()) ||
-            client.name.toLowerCase().includes(search.toLowerCase());
-        const matchesStatus = filterStatus === 'all' || client.status === filterStatus;
-        return matchesSearch && matchesStatus;
-    });
+    const filters = {};
+    if (search) filters.search = search;
+    if (filterStatus !== 'all') filters.status = filterStatus;
+
+    const { data, isLoading, isError, error } = useClients(filters);
+    const clients = data?.data ?? [];
 
     const getPaymentCycleStyle = (cycle) => {
         switch (cycle) {
             case 'monthly': return 'bg-secondary-container text-on-secondary-container';
-            case 'weakly': return 'bg-surface-container-highest text-primary'; // Note: weakly typo matches FormConstants
+            case 'weakly': return 'bg-surface-container-highest text-primary';
             case 'once': return 'bg-tertiary-container/20 text-tertiary';
             default: return 'bg-surface-container-high text-on-surface-variant';
         }
     };
+
+    const getStatusDot = (status) => {
+        switch (status) {
+            case 'active': return 'bg-emerald-500';
+            case 'paused': return 'bg-amber-400';
+            case 'stopped': return 'bg-error';
+            default: return 'bg-outline';
+        }
+    };
+
+    const renderSkeletonRows = () =>
+        Array.from({ length: 4 }).map((_, i) => (
+            <tr key={i} className="animate-pulse">
+                <td className="py-4 pl-2 border-b border-surface-container-high/50">
+                    <div className="h-3 w-32 bg-surface-container-high rounded" />
+                </td>
+                <td className="py-4 border-b border-surface-container-high/50 hidden sm:table-cell">
+                    <div className="h-3 w-28 bg-surface-container-high rounded" />
+                </td>
+                <td className="py-4 border-b border-surface-container-high/50">
+                    <div className="h-5 w-16 bg-surface-container-high rounded-full" />
+                </td>
+                <td className="py-4 border-b border-surface-container-high/50 hidden md:table-cell">
+                    <div className="h-5 w-16 bg-surface-container-high rounded-full" />
+                </td>
+                <td className="py-4 border-b border-surface-container-high/50 hidden lg:table-cell">
+                    <div className="h-3 w-20 bg-surface-container-high rounded ml-auto" />
+                </td>
+            </tr>
+        ));
 
     return (
         <div className="space-y-6">
@@ -98,7 +81,6 @@ const Clients = () => {
                             <Input
                                 type="text"
                                 prefix={<IoSearchSharp />}
-                                className="w-full bg-surface-container-low focus:bg-surface-container-lowest border border-transparent focus:border-primary/40 rounded-lg py-2 pl-9 pr-4 text-sm font-body text-on-surface placeholder:text-outline focus:outline-none transition-all duration-200"
                                 placeholder="Search clients..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
@@ -106,6 +88,13 @@ const Clients = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* Error State */}
+                {isError && (
+                    <div className="rounded-lg bg-error/10 border border-error/20 text-error text-sm px-4 py-3 mb-6">
+                        Failed to load clients: {error?.response?.data?.message ?? error?.message}
+                    </div>
+                )}
 
                 {/* Table */}
                 <div className="w-full overflow-x-auto">
@@ -120,62 +109,62 @@ const Clients = () => {
                             </tr>
                         </thead>
                         <tbody className="font-body text-sm text-on-surface">
-                            {filteredClients.length > 0 ? filteredClients.map((client) => (
+                            {isLoading ? renderSkeletonRows() : clients.length > 0 ? clients.map((client) => (
                                 <tr key={client.id} onClick={() => navigate(`/details/client/${client.id}`)} className="hover:bg-surface-container-high/30 transition-colors group cursor-pointer" title="Click to view details">
                                     <td className="py-4 pl-2 border-b border-surface-container-high/50">
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex flex-col">
-                                                <span className="font-semibold text-on-surface group-hover:text-primary transition-colors">
-                                                    {client.name}
-                                                </span>
-                                                {/* يظهر في الموبايل فقط للتوفير في المساحة */}
-                                                <span className="text-xs text-on-surface-variant sm:hidden mt-0.5">
-                                                    {client.name}
-                                                </span>
-                                            </div>
-                                        </div>
+                                        <span className="font-semibold text-on-surface group-hover:text-primary transition-colors">
+                                            {client.name}
+                                        </span>
                                     </td>
                                     <td className="py-4 text-secondary border-b border-surface-container-high/50 hidden sm:table-cell">
-                                        {client.brand_name}
+                                        {client.brand_name ?? '—'}
                                     </td>
                                     <td className="py-4 border-b border-surface-container-high/50">
                                         <div className="flex items-center gap-1.5">
-                                            <div className={`w-2 h-2 rounded-full ${client.status === 'active' ? 'bg-primary' : client.status === 'paused' ? 'bg-tertiary' : 'bg-error'}`}></div>
-                                            <span className="capitalize">{client.status}</span>
+                                            <div className={`w-2 h-2 rounded-full ${getStatusDot(client.status)}`} />
+                                            <span className="capitalize">{client.status ?? '—'}</span>
                                         </div>
                                     </td>
                                     <td className="py-4 border-b border-surface-container-high/50 hidden md:table-cell">
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getPaymentCycleStyle(client.payment_cycle)}`}>
-                                            {client.payment_cycle === 'weakly' ? 'weekly' : client.payment_cycle}
+                                            {client.payment_cycle === 'weakly' ? 'weekly' : (client.payment_cycle ?? '—')}
                                         </span>
                                     </td>
                                     <td className="py-4 text-right pr-2 font-medium border-b border-surface-container-high/50 hidden lg:table-cell">
-                                        {client.contract_start_date}
+                                        {client.contract_start_date ? new Date(client.contract_start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
                                     </td>
                                 </tr>
                             )) : (
                                 <tr>
-                                    <td colSpan="5" className="py-8 text-center text-on-surface-variant">No clients found matching your search.</td>
+                                    <td colSpan="5" className="py-12 text-center text-on-surface-variant">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <span className="material-symbols-outlined text-[40px] text-outline">person_search</span>
+                                            <p>No clients found matching your search.</p>
+                                        </div>
+                                    </td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
                 </div>
 
-                {/* Pagination */}
-                <div className="flex items-center justify-between pt-6 mt-2">
-                    <span className="text-sm text-on-surface-variant">Showing <span className="font-medium text-on-surface">1</span> to <span className="font-medium text-on-surface">{filteredClients.length}</span> of <span className="font-medium text-on-surface">{mockClients.length}</span> clients</span>
-                    <div className="flex items-center gap-1">
-                        <button className="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                            <span className="material-symbols-outlined text-[20px]"><MdKeyboardArrowLeft /></span>
-                        </button>
-                        <button className="w-8 h-8 rounded-lg bg-primary text-on-primary text-sm font-medium flex items-center justify-center">1</button>
-                        <button className="w-8 h-8 rounded-lg text-on-surface hover:bg-surface-container-high text-sm font-medium flex items-center justify-center transition-colors">2</button>
-                        <button className="p-2 rounded-lg text-on-surface hover:bg-surface-container-high transition-colors">
-                            <span className="material-symbols-outlined text-[20px]"><MdKeyboardArrowRight /></span>
-                        </button>
+                {/* Footer */}
+                {!isLoading && !isError && (
+                    <div className="flex items-center justify-between pt-6 mt-2">
+                        <span className="text-sm text-on-surface-variant">
+                            Showing <span className="font-medium text-on-surface">{clients.length}</span> client{clients.length !== 1 ? 's' : ''}
+                        </span>
+                        <div className="flex items-center gap-1">
+                            <button className="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <MdKeyboardArrowLeft className="text-[20px]" />
+                            </button>
+                            <button className="w-8 h-8 rounded-lg bg-primary text-on-primary text-sm font-medium flex items-center justify-center">1</button>
+                            <button className="p-2 rounded-lg text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <MdKeyboardArrowRight className="text-[20px]" />
+                            </button>
+                        </div>
                     </div>
-                </div>
+                )}
             </section>
         </div>
     );
