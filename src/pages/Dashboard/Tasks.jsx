@@ -3,54 +3,19 @@ import Input from '../../components/common/input';
 import { MdKeyboardArrowRight, MdKeyboardArrowLeft } from "react-icons/md";
 import { IoSearchSharp } from "react-icons/io5";
 import { useNavigate } from 'react-router-dom';
-const mockTasks = [
-    {
-        id: 1,
-        client_name: "Acme Corp",
-        employee_name: "Emily Chen",
-        task_type: "marketing",
-        status: "completed",
-        price: 1200,
-        cost: 200,
-        date: "Oct 15, 2023"
-    },
-    {
-        id: 2,
-        client_name: "Globex Innovations",
-        employee_name: "John Doe",
-        task_type: "design",
-        status: "pending",
-        price: 800,
-        cost: 0,
-        date: "Oct 18, 2023"
-    },
-    {
-        id: 3,
-        client_name: "Initech Solutions",
-        employee_name: "Marcus Johnson",
-        task_type: "development",
-        status: "cancelled",
-        price: 3500,
-        cost: 150,
-        date: "Oct 20, 2023"
-    }
-];
+import { useTasks } from '../../hooks/api/useTasks';
 
 const Tasks = () => {
     const navigate = useNavigate();
     const [search, setSearch] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
 
-    // Filter Logic
-    const filteredTasks = mockTasks.filter(task => {
-        const matchesSearch = task.client_name.toLowerCase().includes(search.toLowerCase()) ||
-            task.employee_name.toLowerCase().includes(search.toLowerCase());
+    const filters = {};
+    if (search) filters.search = search;
+    if (filterStatus !== 'all') filters.status = filterStatus;
 
-        let matchesStatus = true;
-        if (filterStatus !== 'all') matchesStatus = task.status === filterStatus;
-
-        return matchesSearch && matchesStatus;
-    });
+    const { data, isLoading, isError, error } = useTasks(filters);
+    const tasks = data?.data ?? [];
 
     const getStatusStyle = (status) => {
         switch (status) {
@@ -60,6 +25,33 @@ const Tasks = () => {
             default: return 'bg-surface-container-high text-on-surface-variant';
         }
     };
+
+    const renderSkeletonRows = () =>
+        Array.from({ length: 4 }).map((_, i) => (
+            <tr key={i} className="animate-pulse">
+                <td className="py-4 pl-2 border-b border-surface-container-high/50">
+                    <div className="space-y-2">
+                        <div className="h-3 w-32 bg-surface-container-high rounded" />
+                        <div className="h-2 w-20 bg-surface-container-high rounded" />
+                    </div>
+                </td>
+                <td className="py-4 border-b border-surface-container-high/50 hidden sm:table-cell">
+                    <div className="h-3 w-28 bg-surface-container-high rounded" />
+                </td>
+                <td className="py-4 border-b border-surface-container-high/50 hidden md:table-cell">
+                    <div className="h-5 w-20 bg-surface-container-high rounded-full" />
+                </td>
+                <td className="py-4 border-b border-surface-container-high/50">
+                    <div className="h-5 w-16 bg-surface-container-high rounded-full" />
+                </td>
+                <td className="py-4 text-right border-b border-surface-container-high/50">
+                    <div className="h-3 w-16 bg-surface-container-high rounded ml-auto" />
+                </td>
+                <td className="py-4 text-right pr-2 border-b border-surface-container-high/50 hidden lg:table-cell">
+                    <div className="h-3 w-12 bg-surface-container-high rounded ml-auto" />
+                </td>
+            </tr>
+        ));
 
     return (
         <div className="space-y-6">
@@ -85,7 +77,6 @@ const Tasks = () => {
                         <div className="relative w-full sm:w-auto">
                             <Input
                                 prefix={<IoSearchSharp />}
-                                className="w-full bg-surface-container-low focus:bg-surface-container-lowest border border-transparent focus:border-primary/40 rounded-lg py-2 pl-9 pr-4 text-sm font-body text-on-surface placeholder:text-outline focus:outline-none transition-all duration-200"
                                 placeholder="Search tasks..."
                                 type="text"
                                 value={search}
@@ -95,12 +86,19 @@ const Tasks = () => {
                     </div>
                 </div>
 
-                {/* Tasks Table */}
+                {/* Error */}
+                {isError && (
+                    <div className="rounded-lg bg-error/10 border border-error/20 text-error text-sm px-4 py-3 mb-6">
+                        Failed to load tasks: {error?.response?.data?.message ?? error?.message}
+                    </div>
+                )}
+
+                {/* Table */}
                 <div className="w-full overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="text-xs font-label uppercase tracking-wider text-secondary border-b border-surface-container-highest">
-                                <th className="pb-4 font-medium pl-2">Task Details</th>
+                                <th className="pb-4 font-medium pl-2">Task / Client</th>
                                 <th className="pb-4 font-medium hidden sm:table-cell">Assigned To</th>
                                 <th className="pb-4 font-medium hidden md:table-cell">Task Type</th>
                                 <th className="pb-4 font-medium">Status</th>
@@ -109,20 +107,26 @@ const Tasks = () => {
                             </tr>
                         </thead>
                         <tbody className="font-body text-sm text-on-surface">
-                            {filteredTasks.length > 0 ? filteredTasks.map((task) => (
+                            {isLoading ? renderSkeletonRows() : tasks.length > 0 ? tasks.map((task) => (
                                 <tr key={task.id} onClick={() => navigate(`/details/task/${task.id}`)} className="hover:bg-surface-container-high/30 transition-colors group cursor-pointer" title="Click to view task details">
                                     <td className="py-4 pl-2 border-b border-surface-container-high/50">
                                         <div className="flex flex-col">
-                                            <span className="font-semibold text-on-surface group-hover:text-primary transition-colors">{task.client_name}</span>
+                                            <span className="font-semibold text-on-surface group-hover:text-primary transition-colors">
+                                                {task.client?.name ?? task.name ?? `Task #${task.id}`}
+                                            </span>
                                             <span className="text-xs text-on-surface-variant flex items-center gap-2 mt-0.5">
-                                                {task.date}
-                                                <span className="md:hidden inline-block px-1.5 py-0.5 bg-surface-container-low rounded text-[10px] uppercase tracking-wider ml-1">{task.task_type}</span>
+                                                {task.start_date ? new Date(task.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                                                <span className="md:hidden inline-block px-1.5 py-0.5 bg-surface-container-low rounded text-[10px] uppercase tracking-wider ml-1">
+                                                    {task.task_type?.name ?? task.task_type ?? ''}
+                                                </span>
                                             </span>
                                         </div>
                                     </td>
-                                    <td className="py-4 text-secondary border-b border-surface-container-high/50 hidden sm:table-cell">{task.employee_name}</td>
+                                    <td className="py-4 text-secondary border-b border-surface-container-high/50 hidden sm:table-cell">
+                                        {task.employee?.name ?? '—'}
+                                    </td>
                                     <td className="py-4 border-b border-surface-container-high/50 text-on-surface capitalize hidden md:table-cell">
-                                        {task.task_type}
+                                        {task.task_type?.name ?? task.task_type ?? '—'}
                                     </td>
                                     <td className="py-4 border-b border-surface-container-high/50">
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium capitalize ${getStatusStyle(task.status)}`}>
@@ -130,35 +134,43 @@ const Tasks = () => {
                                         </span>
                                     </td>
                                     <td className="py-4 text-right font-medium font-headline border-b border-surface-container-high/50">
-                                        ${task.price.toLocaleString()}
+                                        ${parseFloat(task.price ?? 0).toLocaleString()}
                                     </td>
                                     <td className="py-4 text-right pr-2 font-medium font-headline text-secondary border-b border-surface-container-high/50 hidden lg:table-cell">
-                                        ${task.cost.toLocaleString()}
+                                        ${parseFloat(task.cost ?? 0).toLocaleString()}
                                     </td>
                                 </tr>
                             )) : (
                                 <tr>
-                                    <td colSpan="6" className="py-8 text-center text-on-surface-variant">No tasks found matching your filters.</td>
+                                    <td colSpan="6" className="py-12 text-center text-on-surface-variant">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <span className="material-symbols-outlined text-[40px] text-outline">task_alt</span>
+                                            <p>No tasks found matching your filters.</p>
+                                        </div>
+                                    </td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
                 </div>
 
-                {/* Pagination */}
-                <div className="flex items-center justify-between pt-6 mt-2">
-                    <span className="text-sm text-on-surface-variant">Showing <span className="font-medium text-on-surface">1</span> to <span className="font-medium text-on-surface">{filteredTasks.length}</span> of <span className="font-medium text-on-surface">{mockTasks.length}</span> tasks</span>
-                    <div className="flex items-center gap-1">
-                        <button className="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                            <span className="material-symbols-outlined text-[20px]"><MdKeyboardArrowLeft /></span>
-                        </button>
-                        <button className="w-8 h-8 rounded-lg bg-primary text-on-primary text-sm font-medium flex items-center justify-center">1</button>
-                        <button className="w-8 h-8 rounded-lg text-on-surface hover:bg-surface-container-high text-sm font-medium flex items-center justify-center transition-colors">2</button>
-                        <button className="p-2 rounded-lg text-on-surface hover:bg-surface-container-high transition-colors">
-                            <span className="material-symbols-outlined text-[20px]"><MdKeyboardArrowRight /></span>
-                        </button>
+                {/* Footer */}
+                {!isLoading && !isError && (
+                    <div className="flex items-center justify-between pt-6 mt-2">
+                        <span className="text-sm text-on-surface-variant">
+                            Showing <span className="font-medium text-on-surface">{tasks.length}</span> task{tasks.length !== 1 ? 's' : ''}
+                        </span>
+                        <div className="flex items-center gap-1">
+                            <button className="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <MdKeyboardArrowLeft className="text-[20px]" />
+                            </button>
+                            <button className="w-8 h-8 rounded-lg bg-primary text-on-primary text-sm font-medium flex items-center justify-center">1</button>
+                            <button className="p-2 rounded-lg text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <MdKeyboardArrowRight className="text-[20px]" />
+                            </button>
+                        </div>
                     </div>
-                </div>
+                )}
             </section>
         </div>
     );
