@@ -3,11 +3,11 @@ import axiosInstance from '../../api/axios';
 
 const QUERY_KEY = ['transactions'];
 
-export const useTransactions = () => {
+export const useTransactions = (filters = {}) => {
   return useQuery({
-    queryKey: QUERY_KEY,
+    queryKey: [...QUERY_KEY, filters],
     queryFn: async () => {
-      const { data } = await axiosInstance.get('/transactions');
+      const { data } = await axiosInstance.get('/transactions', { params: filters });
       return data;
     },
   });
