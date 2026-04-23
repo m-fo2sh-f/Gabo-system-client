@@ -4,26 +4,33 @@ import { MdKeyboardArrowRight, MdKeyboardArrowLeft, MdEdit } from "react-icons/m
 import { IoSearchSharp } from "react-icons/io5";
 import { useNavigate } from 'react-router-dom';
 import { useEmployees } from '../../hooks/api/useEmployees';
+import Pagination from '../../components/common/Pagination';
+import capitalize from '../../utils/capitalize';
+import { MdPersonSearch } from "react-icons/md";
+
 
 const Employees = () => {
     const [search, setSearch] = useState('');
     const [filterType, setFilterType] = useState('all');
+    const [page, setPage] = useState(1);
     const navigate = useNavigate();
-
-    const filters = {};
+    const filters = { page };
     if (search) filters.search = search;
     if (filterType !== 'all') filters.employment_type = filterType;
 
+
+
     const { data, isLoading, isError, error } = useEmployees(filters);
-    const employees = data?.data ?? [];
+    console.log(data);
+
+    const employees = data?.data?.data ?? [];
+    const meta = data?.data?.meta;
 
     const getTypeDisplay = (employmentType) => {
-        const isFreelance = employmentType === 'freelance';
-        return isFreelance ? (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border border-outline-variant/40 text-secondary bg-surface">Freelance</span>
-        ) : (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-container-high text-on-surface-variant">Full-time</span>
-        );
+        return (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border border-outline-variant/40 text-secondary bg-surface">{capitalize(employmentType)}</span>
+        )
+
     };
 
     const getStatusDot = (status) => {
@@ -76,6 +83,8 @@ const Employees = () => {
                         >
                             <option value="all">All Types</option>
                             <option value="full_time">Full-time</option>
+                            <option value="part_time">Part-time</option>
+                            <option value="internship">Internship</option>
                             <option value="freelance">Freelance</option>
                         </select>
 
@@ -134,8 +143,8 @@ const Employees = () => {
                                     </td>
                                     <td className="py-4 text-right pr-2 border-b border-surface-container-high/50">
                                         <div className="flex items-center justify-end gap-1.5">
-                                            <div className={`w-2 h-2 rounded-full ${getStatusDot(emp.employee_status)}`} />
-                                            <span className="capitalize text-sm">{emp.employee_status ?? '—'}</span>
+                                            <div className={`w-2 h-2 rounded-full ${getStatusDot(emp.status)}`} />
+                                            <span className="capitalize text-sm">{emp.status ?? '—'}</span>
                                         </div>
                                     </td>
                                     <td className="py-4 border-b border-surface-container-high/50 text-center pr-2">
@@ -155,7 +164,7 @@ const Employees = () => {
                                 <tr>
                                     <td colSpan="5" className="py-12 text-center text-on-surface-variant">
                                         <div className="flex flex-col items-center gap-2">
-                                            <span className="material-symbols-outlined text-[40px] text-outline">person_search</span>
+                                            <span className="material-symbols-outlined text-[40px] text-outline"> <MdPersonSearch /> </span>
                                             <p>No employees found matching your search.</p>
                                         </div>
                                     </td>
@@ -166,22 +175,11 @@ const Employees = () => {
                 </div>
 
                 {/* Footer */}
-                {!isLoading && !isError && (
-                    <div className="flex items-center justify-between pt-6 mt-2">
-                        <span className="text-sm text-on-surface-variant">
-                            Showing <span className="font-medium text-on-surface">{employees.length}</span> member{employees.length !== 1 ? 's' : ''}
-                        </span>
-                        <div className="flex items-center gap-1">
-                            <button className="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                <MdKeyboardArrowLeft className="text-[20px]" />
-                            </button>
-                            <button className="w-8 h-8 rounded-lg bg-primary text-on-primary text-sm font-medium flex items-center justify-center">1</button>
-                            <button className="p-2 rounded-lg text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                <MdKeyboardArrowRight className="text-[20px]" />
-                            </button>
-                        </div>
-                    </div>
-                )}
+                {
+                    !isLoading && !isError && meta && (
+                        <Pagination meta={meta} setPage={setPage} />
+                    )
+                }
             </section>
         </div>
     );

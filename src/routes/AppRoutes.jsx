@@ -14,6 +14,8 @@ import ClientForm from '../pages/Add-new/ClientForm';
 import EmployeeForm from '../pages/Add-new/EmployeeForm';
 import TaskForm from '../pages/Add-new/TaskForm';
 import TransactionForm from '../pages/Add-new/TransactionForm';
+import TaskTypeForm from '../pages/Add-new/TaskTypeForm';
+import JobTitle from '../pages/Add-new/JobTitle';
 
 // Details imports
 import DetailsLayout from '../components/layout/DetailsLayout';
@@ -64,6 +66,8 @@ const router = createBrowserRouter([
                     { path: 'employee', element: <EmployeeForm /> },
                     { path: 'task', element: <TaskForm /> },
                     { path: 'transaction', element: <TransactionForm /> },
+                    { path: 'taskType', element: <TaskTypeForm /> },
+                    { path: 'jobTitle', element: <JobTitle /> },
                 ],
             },
             {

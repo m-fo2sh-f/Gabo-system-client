@@ -1,40 +1,46 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import { MdOutlineAccountBalanceWallet, MdTrendingUp, MdTrendingDown, MdAssignment, MdPeopleAlt, MdStar } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
-const monthlyData = [
-    { name: 'Jan', income: 4000, expense: 2400 },
-    { name: 'Feb', income: 4500, expense: 2800 },
-    { name: 'Mar', income: 3800, expense: 2100 },
-    { name: 'Apr', income: 5200, expense: 2900 },
-    { name: 'May', income: 6100, expense: 3100 },
-    { name: 'Jun', income: 5900, expense: 2800 },
-    { name: 'Jul', income: 7200, expense: 3200 },
-];
+import { useGetDashboard } from '../../hooks/api/useGetDashboard';
 
-const expenseData = [
-    { name: 'Salary', value: 5000, color: 'var(--primary)' },
-    { name: 'Ads', value: 3000, color: 'var(--secondary)' },
-    { name: 'Rent', value: 2000, color: 'var(--tertiary)' },
-    { name: 'Other', value: 1000, color: 'var(--error)' },
-];
 
-const recentTransactions = [
-    { id: 1, type: "income", category: "task_payment", amount: 1200, date: "Oct 15, 2023", related_to: "Acme Corp" },
-    { id: 2, type: "expense", category: "salary", amount: 3000, date: "Oct 16, 2023", related_to: "Emily Chen" },
-    { id: 3, type: "expense", category: "ads", amount: 500, date: "Oct 18, 2023", related_to: "Facebook Ads" },
-    { id: 4, type: "income", category: "manual_collection", amount: 800, date: "Oct 20, 2023", related_to: "Globex" },
-    { id: 5, type: "income", category: "task_payment", amount: 2100, date: "Oct 21, 2023", related_to: "Initech Solutions" },
-];
 
-const profitableServicesData = [
-    { name: 'web Development', revenue: 15400 },
-    { name: 'Ads & Marketing', revenue: 12200 },
-    { name: 'Graphic Design', revenue: 8500 },
-];
+
+
+const COLORS = ['var(--primary)', 'var(--secondary)', 'var(--tertiary)', 'var(--error)', 'var(--warning)', '#10b981']; // 10b981 is emerald-500
 
 const Dashboard = () => {
     const navigate = useNavigate();
+    const { data, isLoading, error } = useGetDashboard();
+    const dashboardData = data?.data;
+    console.log(JSON.stringify(dashboardData, null, 2));
+
+    const dynamicMonthlyData = dashboardData?.monthlyStats || [];
+    const expenseData = (dashboardData?.expenseSources || []).map((item, index) => ({
+        ...item,
+        color: COLORS[index % COLORS.length]
+    }));
+    const profitableServicesData = dashboardData?.topServices || [];
+    const recentTransactions = dashboardData?.recentTransaction || [];
+    const topEmployees = dashboardData?.topEmployees || [];
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-64 text-on-surface-variant">
+                <span className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex items-center justify-center h-64 text-error">
+                <p>Failed to load dashboard data.</p>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6">
 
@@ -48,8 +54,10 @@ const Dashboard = () => {
                             <MdTrendingUp size={18} />
                         </div>
                     </div>
-                    <h4 className="font-headline text-2xl font-bold text-on-surface">$45,200</h4>
-                    <span className="text-xs text-emerald-600 font-medium mt-1">+12.5% from last month</span>
+                    <h4 className="font-headline text-2xl font-bold text-on-surface">${dashboardData?.totalIncome?.total_income?.toLocaleString() || 0}</h4>
+                    <span className={`text-xs font-medium mt-1 ${dashboardData?.totalIncome?.is_positive ? 'text-emerald-600' : 'text-error'}`}>
+                        {dashboardData?.totalIncome?.percentage_change > 0 ? '+' : ''}{dashboardData?.totalIncome?.percentage_change}% from last month
+                    </span>
                 </div>
 
                 <div className="bg-surface-container-lowest rounded-xl p-4 sm:p-5 shadow-[0px_10px_20px_rgba(19,27,46,0.02)] border border-outline-variant/10 flex flex-col justify-center">
@@ -59,8 +67,10 @@ const Dashboard = () => {
                             <MdTrendingDown size={18} />
                         </div>
                     </div>
-                    <h4 className="font-headline text-2xl font-bold text-on-surface">$12,500</h4>
-                    <span className="text-xs text-error font-medium mt-1">+2.1% from last month</span>
+                    <h4 className="font-headline text-2xl font-bold text-on-surface">${dashboardData?.totalExpense?.total_expense?.toLocaleString() || 0}</h4>
+                    <span className={`text-xs font-medium mt-1 ${dashboardData?.totalExpense?.is_positive ? 'text-emerald-600' : 'text-error'}`}>
+                        {dashboardData?.totalExpense?.percentage_change > 0 ? '+' : ''}{dashboardData?.totalExpense?.percentage_change}% from last month
+                    </span>
                 </div>
 
                 <div className="bg-surface-container-lowest rounded-xl p-4 sm:p-5 shadow-[0px_10px_20px_rgba(19,27,46,0.02)] border border-outline-variant/10 flex flex-col justify-center">
@@ -70,8 +80,10 @@ const Dashboard = () => {
                             <MdOutlineAccountBalanceWallet size={18} />
                         </div>
                     </div>
-                    <h4 className="font-headline text-2xl font-bold text-on-surface">$32,700</h4>
-                    <span className="text-xs text-emerald-600 font-medium mt-1">+15.2% from last month</span>
+                    <h4 className={`font-headline text-2xl font-bold ${dashboardData?.netProfit?.net_profit < 0 ? 'text-error' : 'text-emerald-600'}`}>${dashboardData?.netProfit?.net_profit?.toLocaleString() || 0}</h4>
+                    <span className={`text-xs font-medium mt-1 ${dashboardData?.netProfit?.is_positive ? 'text-emerald-600' : 'text-error'}`}>
+                        {dashboardData?.netProfit?.percentage_change > 0 ? '+' : ''}{dashboardData?.netProfit?.percentage_change}% from last month
+                    </span>
                 </div>
 
                 <div className="bg-surface-container-lowest rounded-xl p-4 sm:p-5 shadow-[0px_10px_20px_rgba(19,27,46,0.02)] border border-outline-variant/10 flex flex-col justify-center">
@@ -81,8 +93,7 @@ const Dashboard = () => {
                             <MdAssignment size={18} />
                         </div>
                     </div>
-                    <h4 className="font-headline text-2xl font-bold text-on-surface">14</h4>
-                    <span className="text-xs text-on-surface-variant font-medium mt-1">4 pending completion</span>
+                    <h4 className="font-headline text-2xl font-bold text-on-surface">{dashboardData?.activeTasks || 0}</h4>
                 </div>
             </div>
 
@@ -93,7 +104,7 @@ const Dashboard = () => {
                     <h3 className="font-headline text-lg font-bold text-on-surface mb-4 sm:mb-6">Income vs Expenses</h3>
                     <div className="w-full h-fit">
                         <ResponsiveContainer width="100%" height="300">
-                            <AreaChart data={monthlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                            <AreaChart data={dynamicMonthlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
@@ -166,7 +177,7 @@ const Dashboard = () => {
                                 <MdPeopleAlt size={18} />
                             </div>
                         </div>
-                        <h4 className="font-headline text-2xl font-bold text-on-surface">150 Clients</h4>
+                        <h4 className="font-headline text-2xl font-bold text-on-surface">{dashboardData?.numberOfClients || 0} Clients</h4>
                     </div>
 
                     <div className="bg-surface-container-lowest rounded-xl p-4 sm:p-5 shadow-[0px_10px_20px_rgba(19,27,46,0.02)] border border-outline-variant/10 flex flex-col justify-center flex-1">
@@ -176,8 +187,8 @@ const Dashboard = () => {
                                 <MdTrendingDown size={18} />
                             </div>
                         </div>
-                        <h4 className="font-headline text-2xl font-bold text-on-surface">- $12,500</h4>
-                        <span className="text-xs text-error font-medium mt-1">from 20 Client</span>
+                        <h4 className="font-headline text-2xl font-bold text-on-surface">- ${dashboardData?.lateAmountMoney?.total_amount?.toLocaleString() || 0}</h4>
+                        <span className="text-xs text-error font-medium mt-1">from {dashboardData?.lateAmountMoney?.clients_count || 0} Client{dashboardData?.lateAmountMoney?.clients_count !== 1 ? 's' : ''}</span>
                     </div>
                     <div className="bg-surface-container-lowest rounded-xl p-4 sm:p-5 shadow-[0px_10px_20px_rgba(19,27,46,0.02)] border border-outline-variant/10 flex flex-col flex-1">
                         <div className="flex items-center justify-between mb-4">
@@ -187,27 +198,18 @@ const Dashboard = () => {
                             </div>
                         </div>
                         <div className="flex flex-col gap-3">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <span className="w-5 h-5 rounded flex items-center justify-center bg-surface-container text-[10px] font-bold text-on-surface-variant">1</span>
-                                    <span className="text-sm font-medium text-on-surface capitalize">mohamed</span>
+                            {topEmployees.map((emp, idx) => (
+                                <div key={idx} className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-5 h-5 rounded flex items-center justify-center bg-surface-container text-[10px] font-bold text-on-surface-variant">{idx + 1}</span>
+                                        <span className="text-sm font-medium text-on-surface capitalize">{emp.name}</span>
+                                    </div>
+                                    <span className="text-sm font-bold text-emerald-600">+${emp.total_income?.toLocaleString() || 0}</span>
                                 </div>
-                                <span className="text-sm font-bold text-emerald-600">+$150</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <span className="w-5 h-5 rounded flex items-center justify-center bg-surface-container text-[10px] font-bold text-on-surface-variant">2</span>
-                                    <span className="text-sm font-medium text-on-surface capitalize">ahmed</span>
-                                </div>
-                                <span className="text-sm font-bold text-emerald-600">+$100</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <span className="w-5 h-5 rounded flex items-center justify-center bg-surface-container text-[10px] font-bold text-on-surface-variant">3</span>
-                                    <span className="text-sm font-medium text-on-surface capitalize">ali</span>
-                                </div>
-                                <span className="text-sm font-bold text-emerald-600">+$50</span>
-                            </div>
+                            ))}
+                            {topEmployees.length === 0 && (
+                                <div className="text-sm text-on-surface-variant">No top performers found</div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -271,7 +273,7 @@ const Dashboard = () => {
                                         {trx.date}
                                     </td>
                                     <td className={`py-4 text-right pr-2 font-medium font-headline text-base border-b border-surface-container-high/50 ${trx.type === 'income' ? 'text-emerald-600' : 'text-error'}`}>
-                                        {trx.type === 'income' ? '+' : '-'}${trx.amount.toLocaleString()}
+                                        {trx.type === 'income' ? '+' : '-'}${trx.amount?.toLocaleString() || 0}
                                     </td>
                                 </tr>
                             ))}
@@ -282,5 +284,6 @@ const Dashboard = () => {
         </div>
     );
 };
+
 
 export default Dashboard;

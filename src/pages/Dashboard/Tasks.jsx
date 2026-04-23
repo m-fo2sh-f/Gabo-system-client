@@ -1,26 +1,30 @@
 import React, { useState } from 'react';
 import Input from '../../components/common/input';
-import { MdKeyboardArrowRight, MdKeyboardArrowLeft, MdEdit } from "react-icons/md";
+import { MdEdit, MdContentPasteSearch } from "react-icons/md";
 import { IoSearchSharp } from "react-icons/io5";
 import { useNavigate } from 'react-router-dom';
 import { useTasks } from '../../hooks/api/useTasks';
+import Pagination from '../../components/common/Pagination';
+
 
 const Tasks = () => {
     const navigate = useNavigate();
     const [search, setSearch] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
+    const [page, setPage] = useState(1);
 
-    const filters = {};
+    const filters = { page };
     if (search) filters.search = search;
     if (filterStatus !== 'all') filters.status = filterStatus;
 
-    const { data, isLoading, isError, error } = useTasks(filters);
-    const tasks = data?.data ?? [];
+    const { data, isLoading, isError, error } = useTasks(filters, page);
+    const tasks = data?.data.data ?? [];
+    const meta = data?.data.meta;
 
     const getStatusStyle = (status) => {
         switch (status) {
-            case 'completed': return 'bg-primary/10 text-primary border border-primary/20';
-            case 'pending': return 'bg-secondary-container text-on-secondary-container border border-secondary-container/50';
+            case 'completed': return 'bg-success/10 text-success border border-success/20';
+            case 'pending': return 'bg-warning/10 text-warning border border-warning/20';
             case 'cancelled': return 'bg-error/10 text-error border border-error/20';
             default: return 'bg-surface-container-high text-on-surface-variant';
         }
@@ -98,7 +102,7 @@ const Tasks = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="text-xs font-label uppercase tracking-wider text-secondary border-b border-surface-container-highest">
-                                <th className="pb-4 font-medium pl-2">Task / Client</th>
+                                <th className="pb-4 font-medium pl-2">Task</th>
                                 <th className="pb-4 font-medium hidden sm:table-cell">Assigned To</th>
                                 <th className="pb-4 font-medium hidden md:table-cell">Task Type</th>
                                 <th className="pb-4 font-medium">Status</th>
@@ -113,18 +117,18 @@ const Tasks = () => {
                                     <td className="py-4 pl-2 border-b border-surface-container-high/50">
                                         <div className="flex flex-col">
                                             <span className="font-semibold text-on-surface group-hover:text-primary transition-colors">
-                                                {task.client?.name ?? task.name ?? `Task #${task.id}`}
+                                                {task.name.length > 30 ? task.name.substring(0, 30) + '...' : task.name}
                                             </span>
                                             <span className="text-xs text-on-surface-variant flex items-center gap-2 mt-0.5">
                                                 {task.start_date ? new Date(task.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
                                                 <span className="md:hidden inline-block px-1.5 py-0.5 bg-surface-container-low rounded text-[10px] uppercase tracking-wider ml-1">
-                                                    {task.task_type?.name ?? task.task_type ?? ''}
+                                                    {task.task_type ?? ''}
                                                 </span>
                                             </span>
                                         </div>
                                     </td>
                                     <td className="py-4 text-secondary border-b border-surface-container-high/50 hidden sm:table-cell">
-                                        {task.employee?.name ?? '—'}
+                                        {task.employee ?? '—'}
                                     </td>
                                     <td className="py-4 border-b border-surface-container-high/50 text-on-surface capitalize hidden md:table-cell">
                                         {task.task_type?.name ?? task.task_type ?? '—'}
@@ -157,7 +161,7 @@ const Tasks = () => {
                                 <tr>
                                     <td colSpan="7" className="py-12 text-center text-on-surface-variant">
                                         <div className="flex flex-col items-center gap-2">
-                                            <span className="material-symbols-outlined text-[40px] text-outline">task_alt</span>
+                                            <span className="material-symbols-outlined text-[40px] text-outline"> <MdContentPasteSearch /> </span>
                                             <p>No tasks found matching your filters.</p>
                                         </div>
                                     </td>
@@ -168,22 +172,11 @@ const Tasks = () => {
                 </div>
 
                 {/* Footer */}
-                {!isLoading && !isError && (
-                    <div className="flex items-center justify-between pt-6 mt-2">
-                        <span className="text-sm text-on-surface-variant">
-                            Showing <span className="font-medium text-on-surface">{tasks.length}</span> task{tasks.length !== 1 ? 's' : ''}
-                        </span>
-                        <div className="flex items-center gap-1">
-                            <button className="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                <MdKeyboardArrowLeft className="text-[20px]" />
-                            </button>
-                            <button className="w-8 h-8 rounded-lg bg-primary text-on-primary text-sm font-medium flex items-center justify-center">1</button>
-                            <button className="p-2 rounded-lg text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                <MdKeyboardArrowRight className="text-[20px]" />
-                            </button>
-                        </div>
-                    </div>
-                )}
+                {
+                    !isLoading && !isError && meta && (
+                        <Pagination meta={meta} setPage={setPage} />
+                    )
+                }
             </section>
         </div>
     );

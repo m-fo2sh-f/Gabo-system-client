@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -12,12 +12,13 @@ import { useCreateClient, useUpdateClient, useClient } from '../../hooks/api/use
 const ClientForm = () => {
     const { id } = useParams();
     const isEdit = !!id;
-    const navigate = useNavigate();
-    
+    const [oldClient, setOldClient] = useState(false)
+
+
     const { mutateAsync: createClient, isPending: isCreating, error: createError } = useCreateClient();
     const { mutateAsync: updateClient, isPending: isUpdating, error: updateError } = useUpdateClient();
     const { data: clientData, isLoading: isLoadingInitial } = useClient(id);
-    
+
     const isPending = isCreating || isUpdating;
     const apiError = createError || updateError;
 
@@ -26,13 +27,16 @@ const ClientForm = () => {
         control,
         handleSubmit,
         reset,
+        watch,
         formState: { errors }
     } = useForm({
         defaultValues: {
             status: 'active',
             social_links: [],
+            is_late: false,
         }
     });
+    const isLate = watch('is_late');
 
     useEffect(() => {
         if (isEdit && clientData?.data) {
@@ -67,6 +71,11 @@ const ClientForm = () => {
                 ...(data.status && { status: data.status }),
                 ...(data.notes && { notes: data.notes }),
                 social_links: (data.social_links ?? []).filter(l => l.platform && l.url),
+                ...(oldClient ? {
+                    next_payment_date: data.next_payment_date || null,
+                    is_late: data.is_late || false,
+                    late_amount: data.is_late ? (parseFloat(data.late_amount) || 0) : 0,
+                } : {})
             };
 
             if (isEdit) {
@@ -104,6 +113,7 @@ const ClientForm = () => {
                 <Input
                     label="Client Name"
                     type="text"
+
                     placeholder="Client Name"
                     {...register('name', { required: 'Client Name is required' })}
                     error={errors.name?.message}
@@ -132,30 +142,93 @@ const ClientForm = () => {
                 <Input
                     label="Contract Start Date"
                     type="date"
-                    {...register('contract_start_date')}
+                    {...register('contract_start_date', { required: 'Contract Start Date is required' })}
                     error={errors.contract_start_date?.message}
                 />
                 <Input
                     label="Contract Value"
                     type="number"
                     placeholder="0.00"
-                    {...register('contract_value', { min: { value: 0, message: 'Must be ≥ 0' } })}
+                    {...register('contract_value', { required: 'Contract Value is required', min: { value: 0, message: 'Must be ≥ 0' } })}
                     error={errors.contract_value?.message}
                 />
                 <Select
                     label="Payment Cycle"
                     options={paymentCycleOptions}
                     placeholder="Select Payment Cycle"
-                    {...register('payment_cycle')}
+                    {...register('payment_cycle', { required: 'Payment Cycle is required' })}
                     error={errors.payment_cycle?.message}
                 />
                 <Select
                     label="Client Status"
                     placeholder="Select Client Status"
                     options={clientStatusOptions}
-                    {...register('status')}
+                    {...register('status', { required: 'Client Status is required' })}
                     error={errors.status?.message}
                 />
+                <div className="col-span-1 md:col-span-2 mt-2">
+                    <label className="block text-xs font-semibold text-on-surface-variant mb-3 uppercase tracking-wider">
+                        Client Type
+                    </label>
+                    <div className="relative flex p-1 bg-surface-container-low rounded-xl w-full md:w-1/2">
+                        <div
+                            className={`absolute left-1 top-1 bottom-1 w-[calc(50%-0.25rem)] bg-surface-container-highest rounded-lg shadow-sm border border-outline-variant/10 z-0 transition-transform duration-300 ease-in-out ${oldClient ? 'translate-x-[calc(100%+0.125rem)]' : 'translate-x-0'}`}
+                        />
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setOldClient(false)
+
+                            }}
+                            className={`flex-1 py-2.5 text-sm z-10 relative transition-colors cursor-pointer ${!oldClient ? 'font-semibold text-primary' : 'font-medium text-on-surface-variant hover:text-on-surface'}`}
+                        >
+                            New Client
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setOldClient(true)
+
+                            }}
+                            className={`flex-1 py-2.5 text-sm z-10 relative transition-colors cursor-pointer ${oldClient ? 'font-semibold text-primary' : 'font-medium text-on-surface-variant hover:text-on-surface'}`}
+                        >
+                            Old Client
+                        </button>
+                    </div>
+                </div>
+
+                {oldClient && (
+                    <>
+                        <Input
+                            label="Next Payment Date"
+                            type="date"
+                            {...register('next_payment_date', { required: 'Next Payment Date is required' })}
+                            error={errors.next_payment_date?.message}
+                        />
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                id="is_late"
+                                className="mt-7 w-6 h-6 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary dark:focus:ring-primary dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600"
+                                {...register('is_late')}
+                            />
+                            <label htmlFor="is_late" className="mt-7 text-sm font-medium text-on-surface-variant">
+                                Is Late
+                            </label>
+                        </div>
+                    </>
+                )}
+
+
+                {oldClient && isLate && (
+                    <Input
+                        label="Late Amount"
+                        type="number"
+                        placeholder="Late Amount"
+                        {...register('late_amount', { required: 'Late Amount is required' })}
+                        error={errors.late_amount?.message}
+                    />
+                )}
             </div>
 
             {/* Social Links */}

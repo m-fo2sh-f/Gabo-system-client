@@ -4,6 +4,7 @@ import {
     MdPerson, MdBusiness, MdAssignment, MdStickyNote2, MdClose
 } from "react-icons/md";
 import { Link, useParams, useNavigate } from 'react-router-dom';
+import DeleteModel from '../../components/common/DeleteModel';
 import { useTask, useDeleteTask } from '../../hooks/api/useTasks';
 
 const TaskDetails = () => {
@@ -15,7 +16,7 @@ const TaskDetails = () => {
     const task = data?.data ?? data;
 
     const { mutateAsync: deleteTask, isPending: isDeleting } = useDeleteTask();
-
+    console.log(task);
     const handleDelete = async () => {
         try {
             await deleteTask(id);
@@ -27,8 +28,8 @@ const TaskDetails = () => {
 
     const getStatusStyle = (status) => {
         switch (status) {
-            case 'completed': return 'bg-primary/10 text-primary border-primary/20';
-            case 'pending': return 'bg-secondary-container text-on-secondary-container border-secondary-container/50';
+            case "completed": return 'bg-primary/10 text-primary border-primary/20';
+            case 'pending': return 'bg-warning/10 text-warning border-warning/20';
             case 'cancelled': return 'bg-error/10 text-error border-error/20';
             default: return 'bg-surface-container-high text-on-surface-variant border-outline-variant/20';
         }
@@ -36,8 +37,8 @@ const TaskDetails = () => {
 
     const getStatusDot = (status) => {
         switch (status) {
-            case 'completed': return 'bg-primary';
-            case 'pending': return 'bg-secondary animate-pulse';
+            case "completed": return 'bg-primary';
+            case 'pending': return 'bg-warning animate-pulse';
             case 'cancelled': return 'bg-error';
             default: return 'bg-outline';
         }
@@ -94,7 +95,7 @@ const TaskDetails = () => {
                             <MdAssignment className="text-4xl" />
                         </div>
                         <h2 className="font-headline text-2xl font-bold text-on-surface mb-2 capitalize">
-                            {task?.task_type?.name ?? task?.task_type ?? 'Task'}
+                            {task?.task_type}
                         </h2>
                         <p className="font-body text-on-surface-variant text-sm mb-6">Task Type</p>
                         <div className={`px-5 py-2 border rounded-full font-label text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 ${getStatusStyle(task?.status)}`}>
@@ -116,8 +117,8 @@ const TaskDetails = () => {
                                     <div>
                                         <p className="font-label text-xs text-on-surface-variant mb-1">Client / Brand</p>
                                         {task?.client ? (
-                                            <Link to={`/details/client/${task.client.id}`} className="font-body text-primary font-medium hover:underline">
-                                                {task.client.name}
+                                            <Link to={`/details/client/${task.client_id}`} className="font-body text-primary font-medium hover:underline">
+                                                {task.client}
                                             </Link>
                                         ) : <p className="font-body text-on-surface font-medium">—</p>}
                                     </div>
@@ -129,8 +130,8 @@ const TaskDetails = () => {
                                     <div>
                                         <p className="font-label text-xs text-on-surface-variant mb-1">Assigned Employee</p>
                                         {task?.employee ? (
-                                            <Link to={`/details/employee/${task.employee.id}`} className="font-body text-primary font-medium hover:underline">
-                                                {task.employee.name}
+                                            <Link to={`/details/employee/${task.employee_id}`} className="font-body text-primary font-medium hover:underline">
+                                                {task.employee}
                                             </Link>
                                         ) : <p className="font-body text-on-surface font-medium">Unassigned</p>}
                                     </div>
@@ -206,25 +207,14 @@ const TaskDetails = () => {
             </div>
 
             {/* Delete Modal */}
-            <div className={`${showDeleteModal ? 'fixed' : 'hidden'} inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4`}>
-                <div className="bg-surface rounded-xl p-6 md:p-8 ghost-border w-full max-w-md shadow-xl">
-                    <h3 className="font-label text-xl font-bold text-on-surface mb-2">Delete Task</h3>
-                    <p className="font-body text-on-surface-variant mb-2">Are you sure you want to delete this task?</p>
-                    <p className="text-xs text-error/70 mb-6">This action cannot be undone.</p>
-                    <div className="flex gap-4">
-                        <button onClick={() => setShowDeleteModal(false)} className="primary-btn flex-1" disabled={isDeleting}>
-                            <MdClose /> Cancel
-                        </button>
-                        <button onClick={handleDelete} className="error-btn flex-1 flex items-center justify-center gap-2" disabled={isDeleting}>
-                            {isDeleting ? (
-                                <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Deleting...</>
-                            ) : (
-                                <><MdDelete /> Delete</>
-                            )}
-                        </button>
-                    </div>
-                </div>
-            </div>
+            {showDeleteModal && (
+                <DeleteModel
+                    setShowDeleteModal={setShowDeleteModal}
+                    handleDelete={handleDelete}
+                    isDeleting={isDeleting}
+                    name={`task ${task?.task_type}`}
+                />
+            )}
         </div>
     );
 };

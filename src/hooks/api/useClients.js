@@ -7,7 +7,7 @@ export const useClients = (filters = {}) => {
   return useQuery({
     queryKey: [...QUERY_KEY, filters],
     queryFn: async () => {
-      const { data } = await axiosInstance.get('/clients', { params: filters });
+      const { data } = await axiosInstance.get('/v1/clients', { params: filters });
       return data;
     },
   });
@@ -17,7 +17,7 @@ export const useClient = (id) => {
   return useQuery({
     queryKey: [...QUERY_KEY, id],
     queryFn: async () => {
-      const { data } = await axiosInstance.get(`/clients/${id}`);
+      const { data } = await axiosInstance.get(`/v1/clients/${id}`);
       return data;
     },
     enabled: !!id,
@@ -28,7 +28,7 @@ export const useCreateClient = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (newClient) => {
-      const { data } = await axiosInstance.post('/clients', newClient);
+      const { data } = await axiosInstance.post('/v1/clients', newClient);
       return data;
     },
     onSuccess: () => {
@@ -41,7 +41,7 @@ export const useUpdateClient = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...updateData }) => {
-      const { data } = await axiosInstance.put(`/clients/${id}`, updateData);
+      const { data } = await axiosInstance.put(`/v1/clients/${id}`, updateData);
       return data;
     },
     onSuccess: (_, variables) => {
@@ -55,7 +55,7 @@ export const useDeleteClient = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id) => {
-      const { data } = await axiosInstance.delete(`/clients/${id}`);
+      const { data } = await axiosInstance.delete(`/v1/clients/${id}`);
       return data;
     },
     onSuccess: () => {

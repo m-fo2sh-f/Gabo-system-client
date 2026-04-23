@@ -1,21 +1,29 @@
 import React, { useState } from 'react';
 import Input from '../../components/common/input';
-import { MdKeyboardArrowRight, MdKeyboardArrowLeft, MdArrowDownward, MdArrowUpward, MdEdit } from "react-icons/md";
+import { MdArrowDownward, MdArrowUpward, MdEdit } from "react-icons/md";
 import { IoSearchSharp } from "react-icons/io5";
 import { useNavigate } from 'react-router-dom';
 import { useTransactions } from '../../hooks/api/useTransactions';
+import Pagination from '../../components/common/Pagination';
+import { FaSearchDollar } from "react-icons/fa";
+
+
+
 
 const Transactions = () => {
     const navigate = useNavigate();
     const [search, setSearch] = useState('');
     const [filterType, setFilterType] = useState('all');
+    const [page, setPage] = useState(1);
 
-    const filters = {};
+    const filters = { page };
     if (search) filters.search = search;
     if (filterType !== 'all') filters.type = filterType;
 
     const { data, isLoading, isError, error } = useTransactions(filters);
-    const transactions = data?.data ?? [];
+    const transactions = data?.data?.data ?? [];
+    const meta = data?.data?.meta;
+
 
     const getTypeStyle = (type) => {
         return type === 'income'
@@ -159,7 +167,7 @@ const Transactions = () => {
                                 <tr>
                                     <td colSpan="6" className="py-12 text-center text-on-surface-variant">
                                         <div className="flex flex-col items-center gap-2">
-                                            <span className="material-symbols-outlined text-[40px] text-outline">receipt_long</span>
+                                            <span className="material-symbols-outlined text-[40px] text-outline"> <FaSearchDollar />  </span>
                                             <p>No transactions found matching your search.</p>
                                         </div>
                                     </td>
@@ -170,22 +178,11 @@ const Transactions = () => {
                 </div>
 
                 {/* Footer */}
-                {!isLoading && !isError && (
-                    <div className="flex items-center justify-between pt-6 mt-2">
-                        <span className="text-sm text-on-surface-variant">
-                            Showing <span className="font-medium text-on-surface">{transactions.length}</span> record{transactions.length !== 1 ? 's' : ''}
-                        </span>
-                        <div className="flex items-center gap-1">
-                            <button className="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                <MdKeyboardArrowLeft className="text-[20px]" />
-                            </button>
-                            <button className="w-8 h-8 rounded-lg bg-primary text-on-primary text-sm font-medium flex items-center justify-center">1</button>
-                            <button className="p-2 rounded-lg text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                <MdKeyboardArrowRight className="text-[20px]" />
-                            </button>
-                        </div>
-                    </div>
-                )}
+                {
+                    !isLoading && !isError && meta && (
+                        <Pagination meta={meta} setPage={setPage} />
+                    )
+                }
             </section>
         </div>
     );

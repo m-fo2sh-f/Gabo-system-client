@@ -16,13 +16,13 @@ const queryClient = new QueryClient({
 })
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <App />
-        <Toaster position="top-right" />
-      </AuthProvider>
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
-  </StrictMode>,
+
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <App />
+      <Toaster position="top-right" />
+    </AuthProvider>
+    <ReactQueryDevtools initialIsOpen={false} />
+  </QueryClientProvider>
+
 )

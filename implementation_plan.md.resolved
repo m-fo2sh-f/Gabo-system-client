@@ -1,0 +1,144 @@
+# Frontend API Integration – Full Implementation Plan
+
+## Background
+
+The backend is a Laravel API (`/api/v1/*`) with full CRUD for: **Clients**, **Employees**, **Tasks**, **Transactions**. The frontend is a React + Vite + TailwindCSS v4 app using TanStack Query v5 and React Hook Form.
+
+**Discovery summary:**
+- ✅ `src/api/axios.js` — Centralized Axios instance with Bearer token interceptor and `auth:logout` event dispatch.
+- ✅ `src/hooks/api/` — All five hooks exist (`useAuth`, `useClients`, `useEmployees`, `useTasks`, `useTransactions`) with full CRUD + `invalidateQueries` on every mutation. **No new hooks needed.**
+- ❌ Dashboard list pages (`Clients`, `Employees`, `Tasks`, `Transactions`) — Use **hardcoded mock data**. Must be wired to real API.
+- ❌ Form pages (`ClientForm`, `EmployeeForm`, `TaskForm`, `TransactionForm`) — Form logic works but `onSubmit` only `console.log`s. Must call `useMutation`.
+- ❌ Details pages (`ClientDetails`, `EmployeeDetails`, `TaskDetails`, `TransactionDetails`) — Use hardcoded data / broken imports (`useClients` called as `mutateAsync`). Must call `useQuery`.
+- ✅ Routing — All routes are already registered in `AppRoutes.jsx`. No new routes needed.
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> The existing hooks accept **no filter params** (e.g., `?search=...&status=...`). I will upgrade them to accept a `filters` object that gets forwarded to the API as query params. This is a non-breaking extension.
+
+> [!WARNING]
+> `ClientDetails.jsx` line 10 has a critical bug: `useClients(id)` is called as `mutateAsync` — this crashes on render. My fix replaces it with the correct `useClient(id)` query hook.
+
+> [!WARNING]
+> `EmployeeDetails.jsx` has no API call at all — it renders 100% hardcoded data. My fix wires it to `useEmployee(id)`.
+
+> [!NOTE]
+> The `TaskForm` needs to fetch **clients** and **employees** from the API for its dropdowns — the original code has `// todo api` comments for this. I will fulfill this using the existing `useClients` and `useEmployees` hooks.
+
+> [!NOTE]
+> The `TransactionForm` needs clients, employees, and tasks for conditional selects. I'll wire these using the existing hooks.
+
+---
+
+## Proposed Changes
+
+### Phase 1 — Upgrade Hooks to Support Filters
+
+#### [MODIFY] [useClients.js](file:///c:/Users/Mohamed/Desktop/gabo-system-api/src/hooks/api/useClients.js)
+- Add `filters` param to `useClients(filters)` → passes as `params` to axios GET.
+
+#### [MODIFY] [useEmployees.js](file:///c:/Users/Mohamed/Desktop/gabo-system-api/src/hooks/api/useEmployees.js)
+- Add `filters` param to `useEmployees(filters)` → passes as `params` to axios GET.
+
+#### [MODIFY] [useTasks.js](file:///c:/Users/Mohamed/Desktop/gabo-system-api/src/hooks/api/useTasks.js)
+- Add `filters` param to `useTasks(filters)` → passes as `params` to axios GET.
+
+#### [MODIFY] [useTransactions.js](file:///c:/Users/Mohamed/Desktop/gabo-system-api/src/hooks/api/useTransactions.js)
+- Add `filters` param to `useTransactions(filters)` → passes as `params` to axios GET.
+
+---
+
+### Phase 2 — Wire Dashboard List Pages to API
+
+#### [MODIFY] [Clients.jsx](file:///c:/Users/Mohamed/Desktop/gabo-system-api/src/pages/Dashboard/Clients.jsx)
+- Remove mock data; import `useClients`.
+- Pass `{ search, status }` filter state to the hook.
+- Render loading skeleton + error state.
+- Map real API data (`data?.data` array) in table rows.
+
+#### [MODIFY] [Employees.jsx](file:///c:/Users/Mohamed/Desktop/gabo-system-api/src/pages/Dashboard/Employees.jsx)
+- Remove mock data; import `useEmployees`.
+- Pass `{ search, employment_type }` filter state.
+- Render loading skeleton + error state.
+- Map real API data in table rows.
+
+#### [MODIFY] [Tasks.jsx](file:///c:/Users/Mohamed/Desktop/gabo-system-api/src/pages/Dashboard/Tasks.jsx)
+- Remove mock data; import `useTasks`.
+- Pass `{ search, status }` filter state.
+- Render loading skeleton + error state.
+- Map real API data. Use `task.client?.name`, `task.employee?.name`.
+
+#### [MODIFY] [Transactions.jsx](file:///c:/Users/Mohamed/Desktop/gabo-system-api/src/pages/Dashboard/Transactions.jsx)
+- Remove mock data; import `useTransactions`.
+- Pass `{ search, type }` filter state.
+- Render loading skeleton + error state.
+- Map real API data.
+
+---
+
+### Phase 3 — Wire Form Pages to useMutation
+
+#### [MODIFY] [ClientForm.jsx](file:///c:/Users/Mohamed/Desktop/gabo-system-api/src/pages/Add-new/ClientForm.jsx)
+- Import `useCreateClient`; call `mutateAsync` in `onSubmit`.
+- Show loading spinner on submit button (`isPending`).
+- On success → `navigate('/clients')`.
+- Show API error toast (inline error div).
+
+#### [MODIFY] [EmployeeForm.jsx](file:///c:/Users/Mohamed/Desktop/gabo-system-api/src/pages/Add-new/EmployeeForm.jsx)
+- Import `useCreateEmployee`; call `mutateAsync` in `onSubmit`.
+- Handle `is_freelance` boolean properly (convert to `employment_type: 'full_time'|'freelance'` per API contract).
+- Show loading state on button.
+
+#### [MODIFY] [TaskForm.jsx](file:///c:/Users/Mohamed/Desktop/gabo-system-api/src/pages/Add-new/TaskForm.jsx)
+- Import `useClients`, `useEmployees` for dropdowns.
+- Map them into `{ value, label }` option arrays.
+- Import `useCreateTask`; call `mutateAsync` in `onSubmit`.
+- Show loading state on button.
+
+#### [MODIFY] [TransactionForm.jsx](file:///c:/Users/Mohamed/Desktop/gabo-system-api/src/pages/Add-new/TransactionForm.jsx)
+- Import `useClients`, `useEmployees`, `useTasks` for conditional selects.
+- Import `useCreateTransaction`; call `mutateAsync` in `onSubmit`.
+- Show loading state on button.
+
+---
+
+### Phase 4 — Wire Details Pages to useQuery
+
+#### [MODIFY] [ClientDetails.jsx](file:///c:/Users/Mohamed/Desktop/gabo-system-api/src/pages/Details/ClientDetails.jsx)
+- Fix broken import: use `useClient(id)` (singular).
+- Wire `useDeleteClient` mutation to the Delete button.
+- Replace hardcoded values with `client?.field` dynamic values.
+- Add edit navigation to `/add-new/client?edit=id`.
+
+#### [MODIFY] [EmployeeDetails.jsx](file:///c:/Users/Mohamed/Desktop/gabo-system-api/src/pages/Details/EmployeeDetails.jsx)
+- Add `useEmployee(id)` query.
+- Replace all hardcoded values with `employee?.field`.
+- Wire `useDeleteEmployee` mutation.
+
+#### [MODIFY] [TaskDetails.jsx](file:///c:/Users/Mohamed/Desktop/gabo-system-api/src/pages/Details/TaskDetails.jsx)
+- Add `useTask(id)` query.
+- Replace hardcoded values.
+- Wire `useDeleteTask` mutation.
+
+#### [MODIFY] [TransactionDetails.jsx](file:///c:/Users/Mohamed/Desktop/gabo-system-api/src/pages/Details/TransactionDetails.jsx)
+- Add `useTransaction(id)` query.
+- Replace hardcoded values.
+- Wire `useDeleteTransaction` mutation.
+
+---
+
+## Verification Plan
+
+### Automated
+- `npm run build` — ensure no TypeScript/JSX errors
+- Dev server with real backend → test each CRUD flow
+
+### Manual Verification
+1. Navigate to `/clients` → table shows API data, search filters work.
+2. Click "Add New" → form submits to backend, list refreshes.
+3. Click a row → details page shows real data.
+4. Click Delete → confirmation modal → record removed, list auto-refreshes.
+5. Repeat for Employees, Tasks, Transactions.

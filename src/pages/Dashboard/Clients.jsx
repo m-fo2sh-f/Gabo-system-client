@@ -1,22 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Input from '../../components/common/input';
 import { MdKeyboardArrowRight, MdKeyboardArrowLeft, MdEdit } from "react-icons/md";
 import { IoSearchSharp } from "react-icons/io5";
 import { useNavigate } from 'react-router-dom';
 import { useClients } from '../../hooks/api/useClients';
+import Pagination from '../../components/common/Pagination';
+import { MdPersonSearch } from "react-icons/md";
 
 const Clients = () => {
     const navigate = useNavigate();
     const [search, setSearch] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
+    const [page, setPage] = useState(1)
+    useEffect(() => {
+        setPage(1);
+    }, [search, filterStatus]);
 
-    const filters = {};
+
+
+    const filters = { page };
     if (search) filters.search = search;
     if (filterStatus !== 'all') filters.status = filterStatus;
 
     const { data, isLoading, isError, error } = useClients(filters);
-    const clients = data?.data ?? [];
 
+    const clients = data?.data.data ?? [];
+    const meta = data?.data?.meta;
     const getPaymentCycleStyle = (cycle) => {
         switch (cycle) {
             case 'monthly': return 'bg-secondary-container text-on-secondary-container';
@@ -105,13 +114,14 @@ const Clients = () => {
                                 <th className="pb-4 font-medium hidden sm:table-cell">Brand Name</th>
                                 <th className="pb-4 font-medium">Status</th>
                                 <th className="pb-4 font-medium hidden md:table-cell">Payment Cycle</th>
+                                <th className="pb-4 font-medium hidden md:table-cell">Is Late</th>
                                 <th className="pb-4 font-medium text-right pr-2 hidden lg:table-cell">Start Date</th>
                                 <th className="pb-4 font-medium text-center pr-2 w-10"></th>
                             </tr>
                         </thead>
                         <tbody className="font-body text-sm text-on-surface">
                             {isLoading ? renderSkeletonRows() : clients.length > 0 ? clients.map((client) => (
-                                <tr key={client.id} onClick={() => navigate(`/details/client/${client.id}`)} className="hover:bg-surface-container-high/30 transition-colors group cursor-pointer" title="Click to view details">
+                                <tr key={client.id} onClick={() => navigate(`/details/client/${client.id}`)} className={` ${client.is_late ? 'bg-error/10' : ''} hover:bg-surface-container-high/30 transition-colors group cursor-pointer`} title="Click to view details">
                                     <td className="py-4 pl-2 border-b border-surface-container-high/50">
                                         <span className="font-semibold text-on-surface group-hover:text-primary transition-colors">
                                             {client.name}
@@ -130,6 +140,12 @@ const Clients = () => {
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getPaymentCycleStyle(client.payment_cycle)}`}>
                                             {client.payment_cycle === 'weakly' ? 'weekly' : (client.payment_cycle ?? '—')}
                                         </span>
+                                    </td>
+                                    <td className="py-4 border-b border-surface-container-high/50 hidden md:table-cell">
+                                        <div className="flex items-center gap-1.5">
+                                            <div className={`w-2 h-2 rounded-full ${getStatusDot(client.is_late ? 'stopped' : 'active')}`} />
+                                            <span className="capitalize">{client.is_late ? 'Late' : 'On Time'}</span>
+                                        </div>
                                     </td>
                                     <td className="py-4 text-right pr-2 font-medium border-b border-surface-container-high/50 hidden lg:table-cell">
                                         {client.contract_start_date ? new Date(client.contract_start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
@@ -151,7 +167,7 @@ const Clients = () => {
                                 <tr>
                                     <td colSpan="6" className="py-12 text-center text-on-surface-variant">
                                         <div className="flex flex-col items-center gap-2">
-                                            <span className="material-symbols-outlined text-[40px] text-outline">person_search</span>
+                                            <MdPersonSearch className="text-[40px] text-outline" />
                                             <p>No clients found matching your search.</p>
                                         </div>
                                     </td>
@@ -162,24 +178,13 @@ const Clients = () => {
                 </div>
 
                 {/* Footer */}
-                {!isLoading && !isError && (
-                    <div className="flex items-center justify-between pt-6 mt-2">
-                        <span className="text-sm text-on-surface-variant">
-                            Showing <span className="font-medium text-on-surface">{clients.length}</span> client{clients.length !== 1 ? 's' : ''}
-                        </span>
-                        <div className="flex items-center gap-1">
-                            <button className="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                <MdKeyboardArrowLeft className="text-[20px]" />
-                            </button>
-                            <button className="w-8 h-8 rounded-lg bg-primary text-on-primary text-sm font-medium flex items-center justify-center">1</button>
-                            <button className="p-2 rounded-lg text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                <MdKeyboardArrowRight className="text-[20px]" />
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </section>
-        </div>
+                {
+                    !isLoading && !isError && meta && (
+                        <Pagination meta={meta} setPage={setPage} />
+                    )
+                }
+            </section >
+        </div >
     );
 };
 

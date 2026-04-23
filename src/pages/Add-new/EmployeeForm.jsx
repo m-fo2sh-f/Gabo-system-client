@@ -4,19 +4,24 @@ import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Input from '../../components/common/input';
 import Select from '../../components/common/select';
-import { EmployeeeState } from '../../constants/FormConstants.jsx';
+import { EmployeeeState, workType } from '../../constants/FormConstants.jsx';
 import { useCreateEmployee, useUpdateEmployee, useEmployee } from '../../hooks/api/useEmployees';
+
+import useJobTitles from '../../hooks/api/useJobTitles';
 
 const EmployeeForm = () => {
     const { id } = useParams();
     const isEdit = !!id;
-    const [isFreelance, setIsFreelance] = useState(false);
+
     const navigate = useNavigate();
-    
+    const { data: jobTitlesData } = useJobTitles();
+    const jobTitles = jobTitlesData?.data ?? jobTitlesData;
+
     const { mutateAsync: createEmployee, isPending: isCreating, error: createError } = useCreateEmployee();
     const { mutateAsync: updateEmployee, isPending: isUpdating, error: updateError } = useUpdateEmployee();
     const { data: employeeData, isLoading: isLoadingInitial } = useEmployee(id);
-    
+
+
     const isPending = isCreating || isUpdating;
     const apiError = createError || updateError;
 
@@ -24,6 +29,7 @@ const EmployeeForm = () => {
         register,
         handleSubmit,
         setValue,
+        watch,
         reset,
         formState: { errors }
     } = useForm({
@@ -31,10 +37,10 @@ const EmployeeForm = () => {
             employee_status: 'active',
         }
     });
+    const employmentType = watch('employment_type');
+    const isFreelance = employmentType === 'freelance';
 
-    useEffect(() => {
-        setValue('employment_type', isFreelance ? 'freelance' : 'full_time');
-    }, [isFreelance, setValue]);
+
 
     useEffect(() => {
         if (isEdit && employeeData?.data) {
@@ -42,13 +48,14 @@ const EmployeeForm = () => {
             reset({
                 name: data.name ?? '',
                 phone: data.phone ?? '',
-                job_title: data.job_title?.name ?? data.job_title ?? '',
+                employment_type: data.employment_type ?? 'full_time',
+                job_title: data.job_title?.id ?? data.job_title_id ?? '',
                 base_salary: data.base_salary ?? '',
                 commission_rate: data.commission_rate ?? '',
-                employee_status: data.employee_status ?? 'active',
+                status: data.status ?? 'active',
                 notes: data.notes ?? '',
             });
-            setIsFreelance(data.employment_type === 'freelance');
+
         }
     }, [isEdit, employeeData, reset]);
 
@@ -58,24 +65,25 @@ const EmployeeForm = () => {
                 name: data.name,
                 phone: data.phone,
                 employment_type: data.employment_type,
-                employee_status: data.employee_status,
+                status: data.status,
                 notes: data.notes,
+                job_title_id: parseInt(data.job_title),
                 ...(isFreelance
-                    ? { commission_rate: parseFloat(data.commission_rate) }
-                    : { base_salary: parseFloat(data.base_salary) }),
-                ...(data.job_title && { job_title: data.job_title }),
+                    ? { commission_rate: parseFloat(data.commission_rate) || 0 }
+                    : { base_salary: parseFloat(data.base_salary) || 0 }),
             };
-
             if (isEdit) {
                 await updateEmployee({ id, ...payload });
                 toast.success('Employee updated successfully!');
                 navigate(`/details/employee/${id}`);
+
             } else {
                 await createEmployee(payload);
                 toast.success('Employee created successfully!');
                 navigate('/employees');
             }
         } catch {
+            console.log(apiError);
             // error is captured in apiError
         }
     };
@@ -106,14 +114,14 @@ const EmployeeForm = () => {
                     />
                     <button
                         type="button"
-                        onClick={() => setIsFreelance(false)}
+                        onClick={() => setValue('employment_type', 'full_time')}
                         className={`flex-1 py-2.5 text-sm z-10 relative transition-colors cursor-pointer ${!isFreelance ? 'font-semibold text-primary' : 'font-medium text-on-surface-variant hover:text-on-surface'}`}
                     >
                         Fixed Salary
                     </button>
                     <button
                         type="button"
-                        onClick={() => setIsFreelance(true)}
+                        onClick={() => setValue('employment_type', 'freelance')}
                         className={`flex-1 py-2.5 text-sm z-10 relative transition-colors cursor-pointer ${isFreelance ? 'font-semibold text-primary' : 'font-medium text-on-surface-variant hover:text-on-surface'}`}
                     >
                         Freelance
@@ -140,9 +148,13 @@ const EmployeeForm = () => {
                     error={errors.phone?.message}
                 />
 
-                <Input
+                <Select
                     label="Job Title"
                     type="text"
+                    options={jobTitles ? jobTitles.map((jobTitle) => ({
+                        value: jobTitle.id,
+                        label: jobTitle.name,
+                    })) : []}
                     placeholder="e.g. Media Buyer"
                     {...register('job_title')}
                     error={errors.job_title?.message}
@@ -166,16 +178,29 @@ const EmployeeForm = () => {
                         </p>
                     </div>
                 ) : (
-                    <Input
-                        label="Base Salary"
-                        type="number"
-                        placeholder="e.g. 6000"
-                        {...register('base_salary', {
-                            required: !isFreelance ? 'Base salary is required' : false,
-                            min: { value: 0, message: 'Must be ≥ 0' },
-                        })}
-                        error={errors.base_salary?.message}
-                    />
+                    <>
+                        <Input
+                            label="Base Salary"
+                            type="number"
+                            placeholder="e.g. 6000"
+                            {...register('base_salary', {
+                                required: !isFreelance ? 'Base salary is required' : false,
+                                min: { value: 0, message: 'Must be ≥ 0' },
+                            })}
+                            error={errors.base_salary?.message}
+                        />
+                        <Select
+                            label="Work Type"
+                            options={workType}
+                            placeholder="Select Work Type"
+                            {...register('employment_type', {
+                                required: !isFreelance ? 'Work type is required' : false,
+                            })}
+                            error={errors.employment_type?.message}
+                        />
+                    </>
+
+
                 )}
             </div>
 
@@ -183,8 +208,8 @@ const EmployeeForm = () => {
                 label="Employee Status"
                 options={EmployeeeState}
                 placeholder="Select Employee Status"
-                {...register('employee_status')}
-                error={errors.employee_status?.message}
+                {...register('status')}
+                error={errors.status?.message}
             />
 
             <Input
@@ -194,6 +219,7 @@ const EmployeeForm = () => {
                 rows={4}
                 {...register('notes')}
             />
+
 
             {/* API Error */}
             {apiError && (
@@ -216,7 +242,7 @@ const EmployeeForm = () => {
                         </>
                     ) : (
                         <>
-                            <span className="material-symbols-outlined text-[18px]">save</span>
+
                             {isEdit ? 'Update Employee' : 'Save Employee'}
                         </>
                     )}

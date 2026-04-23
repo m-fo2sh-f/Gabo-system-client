@@ -1,8 +1,13 @@
 import { useState } from 'react';
 import {
     MdChevronLeft, MdDelete, MdEdit, MdCall,
-    MdBadge, MdStickyNote2, MdWorkHistory, MdClose, MdCheck
+    MdBadge, MdWorkHistory, MdClose,
 } from "react-icons/md";
+
+import DeleteModel from "../../components/common/DeleteModel";
+
+import toast from 'react-hot-toast';
+
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEmployee, useDeleteEmployee } from '../../hooks/api/useEmployees';
 
@@ -19,9 +24,11 @@ const EmployeeDetails = () => {
     const handleDelete = async () => {
         try {
             await deleteEmployee(id);
+            toast.success('Employee deleted successfully');
             navigate('/employees');
-        } catch {
+        } catch (error) {
             setShowDeleteModal(false);
+            toast.error(error?.response?.data?.message ?? 'Failed to delete employee. It might be linked to other records.');
         }
     };
 
@@ -44,7 +51,14 @@ const EmployeeDetails = () => {
     };
 
     const initials = employee?.name
-        ? employee.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+        ? employee.name
+            .trim()
+            .split(' ')
+            .filter(n => n.length > 0)
+            .map(n => n[0])
+            .join('')
+            .slice(0, 2)
+            .toUpperCase()
         : '??';
 
     if (isLoading) {
@@ -103,12 +117,12 @@ const EmployeeDetails = () => {
                             {employee?.job_title?.name ?? employee?.job_title ?? 'No Job Title'}
                         </p>
                         <div className="flex flex-wrap items-center justify-center gap-2">
-                            <div className={`px-4 py-1.5 border rounded-full font-label text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 ${getStatusStyle(employee?.employee_status)}`}>
-                                <span className={`w-2 h-2 rounded-full ${getStatusDot(employee?.employee_status)}`} />
-                                {employee?.employee_status ?? 'Unknown'}
+                            <div className={`px-4 py-1.5 border rounded-full font-label text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 ${getStatusStyle(employee?.status)}`}>
+                                <span className={`w-2 h-2 rounded-full ${getStatusDot(employee?.status)}`} />
+                                {employee?.status ?? 'Unknown'}
                             </div>
                             <div className="px-4 py-1.5 bg-secondary-container/40 text-on-secondary-container border border-secondary-container rounded-full font-label text-xs font-semibold uppercase tracking-wider">
-                                {employee?.employment_type === 'freelance' ? 'Freelance' : 'Full-Time'}
+                                {employee?.employment_type}
                             </div>
                         </div>
                     </div>
@@ -206,38 +220,15 @@ const EmployeeDetails = () => {
             </div>
 
             {/* Delete Confirmation Modal */}
-            <div className={`${showDeleteModal ? 'fixed' : 'hidden'} inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4`}>
-                <div className="bg-surface rounded-xl p-6 md:p-8 ghost-border w-full max-w-md shadow-xl">
-                    <h3 className="font-label text-xl font-bold text-on-surface mb-2">Delete Employee</h3>
-                    <p className="font-body text-on-surface-variant mb-2">
-                        Are you sure you want to delete <span className="font-semibold text-on-surface">{employee?.name}</span>?
-                    </p>
-                    <p className="text-xs text-error/70 mb-6">This action cannot be undone.</p>
-                    <div className="flex gap-4">
-                        <button
-                            onClick={() => setShowDeleteModal(false)}
-                            className="primary-btn flex-1"
-                            disabled={isDeleting}
-                        >
-                            <MdClose /> Cancel
-                        </button>
-                        <button
-                            onClick={handleDelete}
-                            className="error-btn flex-1 flex items-center justify-center gap-2"
-                            disabled={isDeleting}
-                        >
-                            {isDeleting ? (
-                                <>
-                                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    Deleting...
-                                </>
-                            ) : (
-                                <><MdDelete /> Delete</>
-                            )}
-                        </button>
-                    </div>
-                </div>
-            </div>
+            {showDeleteModal && (
+                <DeleteModel
+                    setShowDeleteModal={setShowDeleteModal}
+                    handleDelete={handleDelete}
+                    isDeleting={isDeleting}
+                    name={employee?.name}
+                />
+            )}
+
         </div>
     );
 };

@@ -1,15 +1,17 @@
 
 
 // Tasks constants
-export const taskTypeOptions = [, { label: 'marketing', value: 'marketing' }, { label: 'design', value: 'design' }, { label: 'development', value: 'development' }, { label: 'other', value: 'other' }]
+export const taskTypeOptions = [{ label: 'marketing', value: 'marketing' }, { label: 'design', value: 'design' }, { label: 'development', value: 'development' }, { label: 'other', value: 'other' }]
 export const taskStatusOptions = [{ label: 'pending', value: 'pending' }, { label: 'completed', value: 'completed' }, { label: 'cancelled', value: 'cancelled' }]
 
 // Employee constants
 export const EmployeeeState = [{ label: 'Active', value: 'active' }, { label: 'Paused', value: 'paused' }, { label: 'Stopped', value: 'stopped' }]
+export const workType = [{ label: 'Full Time', value: 'full_time' }, { label: 'Part Time', value: 'part_time' }, { label: 'Internship', value: 'internship' }]
 
 // Client constants
 export const clientStatusOptions = [{ label: 'Active', value: 'active' }, { label: 'Paused', value: 'paused' }, { label: 'Stopped', value: 'stopped' }]
-export const paymentCycleOptions = [{ label: 'Once', value: 'once' }, { label: 'Monthly', value: 'monthly' }, { label: 'weakly', value: 'weakly' }]
+export const paymentCycleOptions = [{ label: 'Once', value: 'once' }, { label: 'Monthly', value: 'monthly' }, { label: 'Weekly', value: 'weekly' }]
+
 // todo linkedin
 export const socialMediaOptions = [{ value: 'facebook', label: 'Facebook' }, { value: 'snapchat', label: 'Snapchat' }, { value: 'instagram', label: 'Instagram' }, { value: 'linkedin', label: 'LinkedIn' }, { value: 'tiktok', label: 'TikTok' }, { value: 'website', label: 'Website' },];
 

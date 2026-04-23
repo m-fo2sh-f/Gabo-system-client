@@ -7,7 +7,7 @@ export const useTransactions = (filters = {}) => {
   return useQuery({
     queryKey: [...QUERY_KEY, filters],
     queryFn: async () => {
-      const { data } = await axiosInstance.get('/transactions', { params: filters });
+      const { data } = await axiosInstance.get('/v1/transactions', { params: filters });
       return data;
     },
   });
@@ -17,7 +17,7 @@ export const useTransaction = (id) => {
   return useQuery({
     queryKey: [...QUERY_KEY, id],
     queryFn: async () => {
-      const { data } = await axiosInstance.get(`/transactions/${id}`);
+      const { data } = await axiosInstance.get(`/v1/transactions/${id}`);
       return data;
     },
     enabled: !!id,
@@ -28,7 +28,7 @@ export const useCreateTransaction = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (newTransaction) => {
-      const { data } = await axiosInstance.post('/transactions', newTransaction);
+      const { data } = await axiosInstance.post('/v1/transactions', newTransaction);
       return data;
     },
     onSuccess: () => {
@@ -41,7 +41,7 @@ export const useUpdateTransaction = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...updateData }) => {
-      const { data } = await axiosInstance.put(`/transactions/${id}`, updateData);
+      const { data } = await axiosInstance.put(`/v1/transactions/${id}`, updateData);
       return data;
     },
     onSuccess: (_, variables) => {
@@ -55,7 +55,7 @@ export const useDeleteTransaction = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id) => {
-      const { data } = await axiosInstance.delete(`/transactions/${id}`);
+      const { data } = await axiosInstance.delete(`/v1/transactions/${id}`);
       return data;
     },
     onSuccess: () => {

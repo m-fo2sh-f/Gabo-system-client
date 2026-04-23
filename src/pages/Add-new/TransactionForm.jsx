@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -14,47 +14,110 @@ const TransactionForm = () => {
     const { id } = useParams();
     const isEdit = !!id;
     const navigate = useNavigate();
-    
-    const { mutateAsync: createTransaction, isPending: isCreating, error: createError } = useCreateTransaction();
-    const { mutateAsync: updateTransaction, isPending: isUpdating, error: updateError } = useUpdateTransaction();
-    const { data: transactionData, isLoading: isLoadingInitial } = useTransaction(id);
-    
-    const isPending = isCreating || isUpdating;
-    const apiError = createError || updateError;
 
-    const { data: clientsData } = useClients();
-    const { data: employeesData } = useEmployees();
-    const { data: tasksData } = useTasks({ status: 'pending' });
-
-    const clientOptions = (clientsData?.data ?? []).map(c => ({ value: String(c.id), label: c.name }));
-    const employeeOptions = (employeesData?.data ?? []).map(e => ({ value: String(e.id), label: e.name }));
-    const taskOptions = (tasksData?.data ?? []).map(t => ({
-        value: String(t.id),
-        label: `${t.client?.name ?? 'Task'} #${t.id}`
-    }));
-
+    // 1. Core Form Setup
     const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm({
         defaultValues: {
             type: 'income',
             category: '',
-            payment_method: 'cash',
+            amount: '',
+            payment_method: 'cash'
         }
     });
-
+    // Watchers
     const transactionType = watch('type');
     const category = watch('category');
+    const selectedTaskId = watch('task_id');
+    const selectedEmployeeId = watch('employee_id');
 
+    // Transaction Queries
+    const { mutateAsync: createTransaction, isPending: isCreating, error: createError } = useCreateTransaction();
+    const { mutateAsync: updateTransaction, isPending: isUpdating, error: updateError } = useUpdateTransaction();
+    const { data: transactionData, isLoading: isLoadingInitial } = useTransaction(id, { enabled: isEdit });
+
+    const isPending = isCreating || isUpdating;
+    const apiError = createError || updateError;
+
+    // 2. Logic to Determine Which Dropdowns to Load (Strategy Pattern)
+    const needsClients = category === 'manual_collection' || category === 'ads';
+    const needsEmployees = category === 'manual_collection' || category === 'salary';
+    const needsTasks = category === 'task_payment';
+
+    // 3. Related Data Fetching
+    const { data: clientsData } = useClients({}, { enabled: needsClients });
+    const { data: employeesData } = useEmployees({}, { enabled: needsEmployees });
+    const { data: tasksData } = useTasks({ status: 'pending' }, { enabled: needsTasks });
+    console.log('clientsData', clientsData);
+    console.log('employeesData', employeesData);
+    console.log('tasksData', tasksData);
+
+    // 4. Dropdown Option Mappings
+    const clientOptions = useMemo(() =>
+        (clientsData?.data?.data ?? []).map(c => ({ value: String(c.id), label: c.name })),
+        [clientsData]);
+
+    const employeeOptions = useMemo(() =>
+        (employeesData?.data?.data ?? []).map(e => ({ value: String(e.id), label: e.name })),
+        [employeesData]);
+
+    const taskOptions = useMemo(() => {
+        const rawData = tasksData?.data?.data || tasksData?.data || [];
+        const safeArray = Array.isArray(rawData) ? rawData : [];
+        return safeArray.map(t => ({
+            value: String(t.id),
+            label: `${t.client?.name ?? 'Task'} #${t.id}`
+        }));
+    }, [tasksData])
+
+    //task
     useEffect(() => {
-        // Only clear if not editing, to avoid overwriting initial data on first render
+        if (category === 'task_payment' && selectedTaskId && tasksData) {
+            // بنجيب الـ Array بتاعة التاسكات زي ما أنت عامل فوق بالظبط
+            const rawTasks = tasksData?.data?.data || tasksData?.data || [];
+            const safeTasks = Array.isArray(rawTasks) ? rawTasks : [];
+
+            // بندور على التاسك اللي اليوزر اختارها
+            const selectedTask = safeTasks.find(t => String(t.id) === String(selectedTaskId));
+
+            // لو لقيناها وليها سعر، بنعمله set في الـ amount
+            // ملحوظة: اتأكد إن اسم الحقل في الداتابيز عندك price ولا total_price
+            if (selectedTask && selectedTask.price) {
+                setValue('amount', selectedTask.price, { shouldValidate: true });
+            }
+        }
+    }, [category, selectedTaskId, tasksData, setValue]);
+    // salary
+    useEffect(() => {
+        if (category === 'salary' && selectedEmployeeId && employeesData) {
+            const rawEmployees = employeesData?.data?.data || [];
+            const safeEmployees = Array.isArray(rawEmployees) ? rawEmployees : [];
+
+            const selectedEmployee = safeEmployees.find(e => String(e.id) === String(selectedEmployeeId));
+
+            // لو الموظف موجود وليه راتب متسجل
+            if (selectedEmployee && selectedEmployee.base_salary) {
+                setValue('amount', selectedEmployee.base_salary, { shouldValidate: true });
+            }
+        }
+    }, [category, selectedEmployeeId, employeesData, setValue]);
+    // 5. Reset Fields When Category Changes (To Avoid "Orphan" Data)
+    useEffect(() => {
         if (!isEdit) {
-            setValue('category', '');
             setValue('client_id', '');
+            setValue('amount', '');
             setValue('employee_id', '');
             setValue('collector_id', '');
             setValue('task_id', '');
         }
+    }, [category, setValue, isEdit]);
+    useEffect(() => {
+        if (!isEdit) {
+            setValue('category', '');
+
+        }
     }, [transactionType, setValue, isEdit]);
 
+    // 6. Populate Form for Edit Mode
     useEffect(() => {
         if (isEdit && transactionData?.data) {
             const data = transactionData.data;
@@ -73,6 +136,7 @@ const TransactionForm = () => {
         }
     }, [isEdit, transactionData, reset]);
 
+    // 7. Submit Handler
     const onSubmit = async (data) => {
         try {
             const payload = {
@@ -80,14 +144,23 @@ const TransactionForm = () => {
                 category: data.category,
                 amount: parseFloat(data.amount),
                 payment_method: data.payment_method,
-                ...(data.transaction_date && { transaction_date: data.transaction_date }),
-                ...(data.notes && { notes: data.notes }),
-                ...(data.client_id && { client_id: parseInt(data.client_id) }),
-                ...(data.employee_id && { employee_id: parseInt(data.employee_id) }),
-                ...(data.collector_id && { collector_id: parseInt(data.collector_id) }),
-                ...(data.task_id && { task_id: parseInt(data.task_id) }),
+                transaction_date: data.transaction_date,
+                notes: data.notes,
             };
-
+            if (data.type === 'income') {
+                if (data.category === 'task_payment') {
+                    payload.task_id = parseInt(data.task_id);
+                } else if (data.category === 'manual_collection') {
+                    payload.collector_id = parseInt(data.collector_id);
+                    payload.client_id = parseInt(data.client_id);
+                }
+            } else if (data.type === 'expense') {
+                if (data.category === 'salary') {
+                    payload.employee_id = parseInt(data.employee_id);
+                } else if (data.category === 'ads') {
+                    payload.client_id = parseInt(data.client_id);
+                }
+            }
             if (isEdit) {
                 await updateTransaction({ id, ...payload });
                 toast.success('Transaction updated successfully!');
@@ -97,11 +170,12 @@ const TransactionForm = () => {
                 toast.success('Transaction created successfully!');
                 navigate('/transactions');
             }
+            reset();
         } catch {
-            // captured in apiError
         }
     };
 
+    // 8. Loading/Error State
     if (isEdit && isLoadingInitial) {
         return (
             <div className="flex flex-col h-full bg-surface text-on-surface animate-pulse p-6">
@@ -194,9 +268,10 @@ const TransactionForm = () => {
                     label="Amount"
                     type="number"
                     placeholder="0.00"
+
                     {...register('amount', {
                         required: 'Amount is required',
-                        min: { value: 0.01, message: 'Must be > 0' }
+                        min: { value: 0.01, message: 'Must be > 0' },
                     })}
                     error={errors.amount?.message}
                 />
@@ -213,7 +288,7 @@ const TransactionForm = () => {
                 <Input
                     label="Transaction Date"
                     type="date"
-                    {...register('transaction_date')}
+                    {...register('transaction_date', { required: 'Transaction date is required' })}
                     error={errors.transaction_date?.message}
                 />
             </div>

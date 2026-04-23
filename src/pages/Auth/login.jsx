@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import Input from '../../components/common/Input';
-import axiosInstance from '../../api/axios';
-import { useNavigate } from 'react-router-dom';
 import { useLogin } from '../../hooks/api/useAuth';
+import { MdOutlineLogin } from "react-icons/md";
+
 
 const Login = () => {
 
@@ -69,8 +69,8 @@ const Login = () => {
                             className="primary-btn w-full flex justify-center items-center py-3"
                             disabled={isPending}
                         >
-                            <span className="material-symbols-outlined text-[20px] mr-2">
-                                login
+                            <span className="text-[20px] mr-2">
+                                <MdOutlineLogin />
                             </span>
                             {isPending ? 'Logging in...' : 'Login'}
                         </button>

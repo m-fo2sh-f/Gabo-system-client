@@ -3,27 +3,49 @@ import {
     MdChevronLeft, MdDelete, MdEdit, MdCall,
     MdLocationOn, MdStickyNote2, MdClose, MdLink
 } from "react-icons/md";
+import { MdKeyboardArrowRight, MdKeyboardArrowLeft, MdArrowDownward, MdArrowUpward, } from "react-icons/md";
+import DeleteModel from '../../components/common/DeleteModel';
+
+
+
 import { useNavigate, useParams } from 'react-router-dom';
 import { useClient, useDeleteClient } from '../../hooks/api/useClients';
+import { BsFacebook, BsInstagram, BsTiktok, BsLinkedin, BsSnapchat } from 'react-icons/bs';
+import Pagination from '../../components/common/Pagination';
+
+import { FaSearchDollar } from "react-icons/fa";
 
 const platformIcons = {
-    facebook: '📘',
-    snapchat: '👻',
-    instagram: '📸',
-    linkedin: '💼',
-    tiktok: '🎵',
-    website: '🌐',
+    facebook: <BsFacebook />,
+    snapchat: <BsSnapchat />,
+    instagram: <BsInstagram />,
+    linkedin: <BsLinkedin />,
+    tiktok: <BsTiktok />,
+    website: <MdLink />,
 };
 
 const ClientDetails = () => {
     const { id } = useParams();
+    const [page, setPage] = useState(1);
+    const [search, setSearch] = useState('');
+
+
     const navigate = useNavigate();
     const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-    const { data, isLoading, isError, error } = useClient(id);
-    const client = data?.data ?? data;
+
+
 
     const { mutateAsync: deleteClient, isPending: isDeleting } = useDeleteClient();
+
+    const filters = { page };
+    const { data, isLoading, isError, error } = useClient(id, filters);
+    const transactions = data?.data?.transactions ?? [];
+    const meta = data?.data?.meta ?? {};
+    const client = data?.data?.client
+
+
+
 
     const handleDelete = async () => {
         try {
@@ -51,6 +73,40 @@ const ClientDetails = () => {
             default: return 'bg-outline';
         }
     };
+    const formatCategory = (category) =>
+        (category ?? '').replace(/_/g, ' ');
+    const getTypeStyle = (type) => {
+        return type === 'income'
+            ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+            : 'bg-error/10 text-error border border-error/20';
+    };
+    const formatPaymentMethod = (method) =>
+        (method ?? '').replace(/_/g, ' ');
+
+
+    const renderSkeletonRows = () =>
+        Array.from({ length: 4 }).map((_, i) => (
+            <tr key={i} className="animate-pulse">
+                <td className="py-4 pl-2 border-b border-surface-container-high/50">
+                    <div className="space-y-2">
+                        <div className="h-3 w-32 bg-surface-container-high rounded" />
+                        <div className="h-2 w-24 bg-surface-container-high rounded" />
+                    </div>
+                </td>
+                <td className="py-4 border-b border-surface-container-high/50">
+                    <div className="h-5 w-16 bg-surface-container-high rounded-full" />
+                </td>
+                <td className="py-4 border-b border-surface-container-high/50 hidden md:table-cell">
+                    <div className="h-3 w-20 bg-surface-container-high rounded" />
+                </td>
+                <td className="py-4 border-b border-surface-container-high/50 hidden sm:table-cell">
+                    <div className="h-3 w-20 bg-surface-container-high rounded" />
+                </td>
+                <td className="py-4 text-right pr-2 border-b border-surface-container-high/50">
+                    <div className="h-3 w-16 bg-surface-container-high rounded ml-auto" />
+                </td>
+            </tr>
+        ));
 
     if (isLoading) {
         return (
@@ -96,7 +152,7 @@ const ClientDetails = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 mt-5">
                     {/* Profile Card */}
-                    <div className="md:col-span-4 bg-surface-container-low rounded-xl p-6 md:p-8 ghost-border flex flex-col items-center text-center">
+                    <div className={`${client.is_late ? 'bg-error/10!' : 'bg-surface-container-low!'} md:col-span-4 rounded-xl p-6 md:p-8 ghost-border flex flex-col items-center text-center`}>
                         <div className="w-24 h-24 rounded-full bg-surface-container-highest mb-6 flex items-center justify-center text-3xl font-headline font-bold text-secondary ghost-border">
                             {client?.name?.charAt(0)?.toUpperCase() ?? '?'}
                         </div>
@@ -222,33 +278,101 @@ const ClientDetails = () => {
                         <span>Edit Client</span>
                     </button>
                 </div>
+
+                {/* Table */}
+                <div className="mt-5 w-full overflow-y-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="text-xs font-label uppercase tracking-wider text-secondary border-b border-surface-container-highest">
+                                <th className="pb-4 font-medium pl-2">Transaction Details</th>
+                                <th className="pb-4 font-medium">Type</th>
+                                <th className="pb-4 font-medium hidden md:table-cell">Payment Method</th>
+                                <th className="pb-4 font-medium hidden sm:table-cell">Date</th>
+                                <th className="pb-4 font-medium text-center">Actions</th>
+                                <th className="pb-4 font-medium text-right pr-2">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody className="font-body text-sm text-on-surface">
+                            {isLoading ? renderSkeletonRows() : transactions.length > 0 ? transactions.map((trx) => (
+                                <tr key={trx.id} onClick={() => navigate(`/details/transaction/${trx.id}`)} className="hover:bg-surface-container-high/30 transition-colors group cursor-pointer" title="Click to view details">
+                                    <td className="py-4 pl-2 border-b border-surface-container-high/50">
+                                        <div className="flex flex-col">
+                                            <span className="font-semibold text-on-surface group-hover:text-primary transition-colors capitalize">
+                                                {formatCategory(trx.category)}
+                                            </span>
+                                            <span className="text-xs text-on-surface-variant mt-0.5 whitespace-nowrap">
+                                                {trx.client?.name ?? trx.employee?.name ?? trx.task?.client?.name ?? '—'}
+                                                {trx.transaction_date && (
+                                                    <span className="sm:hidden text-outline-variant/50 mx-1">
+                                                        | {new Date(trx.transaction_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                    </span>
+                                                )}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td className="py-4 border-b border-surface-container-high/50">
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium capitalize ${getTypeStyle(trx.type)}`}>
+                                            <span className="mr-1 flex items-center">
+                                                {trx.type === 'income' ? <MdArrowDownward className="text-[12px]" /> : <MdArrowUpward className="text-[12px]" />}
+                                            </span>
+                                            {trx.type}
+                                        </span>
+                                    </td>
+                                    <td className="py-4 text-secondary border-b border-surface-container-high/50 capitalize hidden md:table-cell">
+                                        {formatPaymentMethod(trx.payment_method)}
+                                    </td>
+                                    <td className="py-4 text-on-surface border-b border-surface-container-high/50 hidden sm:table-cell">
+                                        {trx.transaction_date
+                                            ? new Date(trx.transaction_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                                            : '—'}
+                                    </td>
+                                    <td className="py-4 border-b border-surface-container-high/50 text-center">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigate(`/edit/transaction/${trx.id}`);
+                                            }}
+                                            className="p-1.5 rounded-lg text-on-surface-variant hover:text-primary hover:bg-primary/10 transition-colors"
+                                            title="Edit Transaction"
+                                        >
+                                            <MdEdit className="text-[18px]" />
+                                        </button>
+                                    </td>
+                                    <td className={`py-4 text-right pr-2 font-medium font-headline text-base border-b border-surface-container-high/50 ${trx.type === 'income' ? 'text-emerald-600' : 'text-error'}`}>
+                                        {trx.type === 'income' ? '+' : '-'}${parseFloat(trx.amount ?? 0).toLocaleString()}
+                                    </td>
+                                </tr>
+                            )) : (
+                                <tr>
+                                    <td colSpan="6" className="py-12 text-center text-on-surface-variant">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <span className="material-symbols-outlined text-[40px] text-outline"> <FaSearchDollar />  </span>
+                                            <p>No transactions found matching your search.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Footer */}
+                {!isLoading && !isError && (
+                    <Pagination meta={meta} setPage={setPage} />
+                )}
+
             </div>
 
+
             {/* Delete Modal */}
-            <div className={`${showDeleteModal ? 'fixed' : 'hidden'} inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4`}>
-                <div className="bg-surface rounded-xl p-6 md:p-8 ghost-border w-full max-w-md shadow-xl">
-                    <h3 className="font-label text-xl font-bold text-on-surface mb-2">Delete Client</h3>
-                    <p className="font-body text-on-surface-variant mb-2">
-                        Are you sure you want to delete <span className="font-semibold text-on-surface">{client?.name}</span>?
-                    </p>
-                    <p className="text-xs text-error/70 mb-6">This action cannot be undone.</p>
-                    <div className="flex gap-4">
-                        <button onClick={() => setShowDeleteModal(false)} className="primary-btn flex-1" disabled={isDeleting}>
-                            <MdClose /> Cancel
-                        </button>
-                        <button onClick={handleDelete} className="error-btn flex-1 flex items-center justify-center gap-2" disabled={isDeleting}>
-                            {isDeleting ? (
-                                <>
-                                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    Deleting...
-                                </>
-                            ) : (
-                                <><MdDelete /> Delete</>
-                            )}
-                        </button>
-                    </div>
-                </div>
-            </div>
+            {showDeleteModal && (
+                <DeleteModel
+                    setShowDeleteModal={setShowDeleteModal}
+                    handleDelete={handleDelete}
+                    isDeleting={isDeleting}
+                    name={client?.name}
+                />
+            )}
         </div>
     );
 };
