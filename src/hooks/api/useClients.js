@@ -13,14 +13,15 @@ export const useClients = (filters = {}) => {
   });
 };
 
-export const useClient = (id) => {
+export const useClient = (id, params = {}, options = {}) => {
   return useQuery({
-    queryKey: [...QUERY_KEY, id],
+    queryKey: [...QUERY_KEY, id, params],
     queryFn: async () => {
-      const { data } = await axiosInstance.get(`/v1/clients/${id}`);
+      const { data } = await axiosInstance.get(`/v1/clients/${id}`, { params });
       return data;
     },
     enabled: !!id,
+    ...options,
   });
 };
 

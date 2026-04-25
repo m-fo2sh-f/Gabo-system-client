@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     MdChevronLeft, MdDelete, MdEdit, MdCall,
     MdLocationOn, MdStickyNote2, MdClose, MdLink
@@ -12,8 +13,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useClient, useDeleteClient } from '../../hooks/api/useClients';
 import { BsFacebook, BsInstagram, BsTiktok, BsLinkedin, BsSnapchat } from 'react-icons/bs';
 import Pagination from '../../components/common/Pagination';
+import TableSkeleton from '../../components/common/TableSkeleton';
 
 import { FaSearchDollar } from "react-icons/fa";
+import { getStatusStyle, getStatusDot } from '../../utils/getStatusStyleIcon';
+import { formatCategory, formatPaymentMethod, getTypeStyle } from '../../utils/formatters';
 
 const platformIcons = {
     facebook: <BsFacebook />,
@@ -27,7 +31,7 @@ const platformIcons = {
 const ClientDetails = () => {
     const { id } = useParams();
     const [page, setPage] = useState(1);
-    const [search, setSearch] = useState('');
+    const { t, i18n } = useTranslation();
 
 
     const navigate = useNavigate();
@@ -56,57 +60,9 @@ const ClientDetails = () => {
         }
     };
 
-    const getStatusStyle = (status) => {
-        switch (status) {
-            case 'active': return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
-            case 'paused': return 'bg-amber-400/10 text-amber-600 border-amber-400/20';
-            case 'stopped': return 'bg-error/10 text-error border-error/20';
-            default: return 'bg-surface-container-high text-on-surface-variant border-outline-variant/20';
-        }
-    };
 
-    const getStatusDot = (status) => {
-        switch (status) {
-            case 'active': return 'bg-emerald-500';
-            case 'paused': return 'bg-amber-400';
-            case 'stopped': return 'bg-error';
-            default: return 'bg-outline';
-        }
-    };
-    const formatCategory = (category) =>
-        (category ?? '').replace(/_/g, ' ');
-    const getTypeStyle = (type) => {
-        return type === 'income'
-            ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
-            : 'bg-error/10 text-error border border-error/20';
-    };
-    const formatPaymentMethod = (method) =>
-        (method ?? '').replace(/_/g, ' ');
+    const renderSkeletonRows = () => <TableSkeleton rows={4} cols={5} />
 
-
-    const renderSkeletonRows = () =>
-        Array.from({ length: 4 }).map((_, i) => (
-            <tr key={i} className="animate-pulse">
-                <td className="py-4 pl-2 border-b border-surface-container-high/50">
-                    <div className="space-y-2">
-                        <div className="h-3 w-32 bg-surface-container-high rounded" />
-                        <div className="h-2 w-24 bg-surface-container-high rounded" />
-                    </div>
-                </td>
-                <td className="py-4 border-b border-surface-container-high/50">
-                    <div className="h-5 w-16 bg-surface-container-high rounded-full" />
-                </td>
-                <td className="py-4 border-b border-surface-container-high/50 hidden md:table-cell">
-                    <div className="h-3 w-20 bg-surface-container-high rounded" />
-                </td>
-                <td className="py-4 border-b border-surface-container-high/50 hidden sm:table-cell">
-                    <div className="h-3 w-20 bg-surface-container-high rounded" />
-                </td>
-                <td className="py-4 text-right pr-2 border-b border-surface-container-high/50">
-                    <div className="h-3 w-16 bg-surface-container-high rounded ml-auto" />
-                </td>
-            </tr>
-        ));
 
     if (isLoading) {
         return (
@@ -130,10 +86,10 @@ const ClientDetails = () => {
         return (
             <div className="flex flex-col items-center justify-center h-full gap-4 text-on-surface-variant">
                 <span className="material-symbols-outlined text-[60px] text-error/50">error</span>
-                <p className="text-lg font-medium">Failed to load client</p>
+                <p className="text-lg font-medium">{t('common.failure')}</p>
                 <p className="text-sm text-error">{error?.response?.data?.message ?? error?.message}</p>
                 <button onClick={() => navigate('/clients')} className="primary-btn mt-2">
-                    <MdChevronLeft /> Back to Clients
+                    <MdChevronLeft className={i18n.language === 'ar' ? 'rotate-180' : ''} /> {t('forms.client.back')}
                 </button>
             </div>
         );
@@ -144,9 +100,9 @@ const ClientDetails = () => {
             <div className="px-4 md:px-8 max-w-7xl mx-auto w-full flex-1 flex flex-col">
                 {/* Back */}
                 <div>
-                    <button onClick={() => navigate(-1)} className="primary-btn w-full md:w-40 md:float-right mt-5">
-                        <MdChevronLeft className="text-[18px] md:text-[20px]" />
-                        <span>Back</span>
+                    <button onClick={() => navigate(-1)} className="primary-btn w-full md:w-40 ltr:md:float-right rtl:md:float-left mt-5">
+                        <MdChevronLeft className={`text-[18px] md:text-[20px] ${i18n.language === 'ar' ? 'rotate-180' : ''}`} />
+                        <span>{t('forms.client.back')}</span>
                     </button>
                 </div>
 
@@ -157,10 +113,10 @@ const ClientDetails = () => {
                             {client?.name?.charAt(0)?.toUpperCase() ?? '?'}
                         </div>
                         <h2 className="font-headline text-2xl font-bold text-on-surface mb-1">{client?.name}</h2>
-                        <p className="font-body text-on-surface-variant text-sm mb-2">{client?.brand_name ?? 'No brand name'}</p>
+                        <p className="font-body text-on-surface-variant text-sm mb-2">{client?.brand_name ?? t('common.no_data')}</p>
                         <div className={`px-4 py-1.5 border rounded-full font-label text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 mt-4 ${getStatusStyle(client?.status)}`}>
                             <span className={`w-2 h-2 rounded-full ${getStatusDot(client?.status)}`} />
-                            {client?.status ?? 'Unknown'}
+                            {t(`options.status.${client?.status}`) ?? client?.status}
                         </div>
                     </div>
 
@@ -169,14 +125,14 @@ const ClientDetails = () => {
                         {/* Contact Card */}
                         <div className="bg-surface-container-low rounded-xl p-6 md:p-8 ghost-border flex flex-col justify-between">
                             <div>
-                                <h3 className="font-label text-sm text-on-surface-variant uppercase tracking-wider mb-6">Contact Info</h3>
+                                <h3 className="font-label text-sm text-on-surface-variant uppercase tracking-wider mb-6">{t('forms.client.contact_info')}</h3>
                                 <div className="flex items-start gap-4 mb-6">
                                     <div className="w-10 h-10 rounded-full bg-surface flex items-center justify-center shrink-0">
                                         <MdCall className="text-primary text-[20px]" />
                                     </div>
                                     <div>
-                                        <p className="font-label text-xs text-on-surface-variant mb-1">Phone</p>
-                                        <p className="font-body text-on-surface font-medium">{client?.phone ?? '—'}</p>
+                                        <p className="font-label text-xs text-on-surface-variant mb-1">{t('forms.client.phone')}</p>
+                                        <p className="font-body text-on-surface font-medium" dir="ltr">{client?.phone ?? '—'}</p>
                                     </div>
                                 </div>
                                 {client?.address && (
@@ -185,7 +141,7 @@ const ClientDetails = () => {
                                             <MdLocationOn className="text-primary text-[20px]" />
                                         </div>
                                         <div>
-                                            <p className="font-label text-xs text-on-surface-variant mb-1">Address</p>
+                                            <p className="font-label text-xs text-on-surface-variant mb-1">{t('forms.client.address')}</p>
                                             <p className="font-body text-on-surface font-medium">{client.address}</p>
                                         </div>
                                     </div>
@@ -196,26 +152,34 @@ const ClientDetails = () => {
                         {/* Contract Card */}
                         <div className="bg-surface-container-low rounded-xl p-6 md:p-8 ghost-border flex flex-col justify-between relative overflow-hidden">
                             <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-linear-to-br from-primary/10 to-transparent rounded-full blur-2xl pointer-events-none" />
-                            <h3 className="font-label text-sm text-on-surface-variant uppercase tracking-wider mb-4 relative z-10">Contract Details</h3>
+                            <h3 className="font-label text-sm text-on-surface-variant uppercase tracking-wider mb-4 relative z-10">{t('forms.client.contract_details')}</h3>
                             <div className="mb-4 relative z-10">
-                                <p className="font-label text-xs text-on-surface-variant mb-1">Contract Value</p>
+                                <p className="font-label text-xs text-on-surface-variant mb-1">{t('forms.client.contract_value')}</p>
                                 <p className="font-headline text-4xl font-extrabold text-primary">
-                                    ${parseFloat(client?.contract_value ?? 0).toLocaleString()}
+                                    {i18n.language === 'ar' ? '' : 'E.G '}{parseFloat(client?.contract_value ?? 0)} {i18n.language === 'ar' ? 'E.G' : ''}
                                 </p>
                             </div>
+                            {client?.is_late && client?.late_amount > 0 && (
+                                <div className="mb-4 relative z-10">
+                                    <p className="font-label text-xs text-on-surface-variant mb-1">{t('forms.client.late_amount')}</p>
+                                    <p className="font-headline text-4xl font-extrabold text-error">
+                                        {i18n.language === 'ar' ? '' : 'E.G '}{parseFloat(client?.late_amount ?? 0)} {i18n.language === 'ar' ? 'E.G' : ''}
+                                    </p>
+                                </div>
+                            )}
                             <div className="grid grid-cols-2 gap-4 relative z-10">
                                 <div>
-                                    <p className="font-label text-xs text-on-surface-variant mb-1">Start Date</p>
+                                    <p className="font-label text-xs text-on-surface-variant mb-1">{t('forms.client.contract_start')}</p>
                                     <p className="font-body text-on-surface font-medium text-sm">
                                         {client?.contract_start_date
-                                            ? new Date(client.contract_start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                                            ? new Date(client.contract_start_date).toLocaleDateString(i18n.language === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                                             : '—'}
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="font-label text-xs text-on-surface-variant mb-1">Payment Cycle</p>
+                                    <p className="font-label text-xs text-on-surface-variant mb-1">{t('forms.client.payment_cycle')}</p>
                                     <p className="font-body text-on-surface font-medium capitalize text-sm">
-                                        {client?.payment_cycle === 'weakly' ? 'Weekly' : (client?.payment_cycle ?? '—')}
+                                        {t(`options.payment_cycle.${client?.payment_cycle}`) ?? client?.payment_cycle}
                                     </p>
                                 </div>
                             </div>
@@ -225,7 +189,7 @@ const ClientDetails = () => {
                     {/* Social Links */}
                     {client?.social_links?.length > 0 && (
                         <div className="md:col-span-12 bg-surface-container-low rounded-xl p-6 ghost-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                            <span className="font-label text-sm text-on-surface-variant uppercase tracking-wider">Digital Presence</span>
+                            <span className="font-label text-sm text-on-surface-variant uppercase tracking-wider">{t('forms.client.digital_presence')}</span>
                             <div className="flex flex-wrap gap-3">
                                 {client.social_links.map((link, i) => (
                                     <a
@@ -249,7 +213,7 @@ const ClientDetails = () => {
                             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-6">
                                 <h3 className="font-label text-sm text-on-surface-variant uppercase tracking-wider flex items-center gap-2">
                                     <MdStickyNote2 className="text-[18px]" />
-                                    Internal Notes
+                                    {t('forms.client.internal_notes')}
                                 </h3>
                             </div>
                             <div className="bg-surface rounded-lg p-6 ghost-border min-h-[100px]">
@@ -268,14 +232,14 @@ const ClientDetails = () => {
                         className="error-btn w-full flex items-center justify-center gap-2"
                     >
                         <MdDelete className="text-[18px] md:text-[20px]" />
-                        <span>Delete Client</span>
+                        <span>{t('forms.client.delete_client')}</span>
                     </button>
                     <button
                         onClick={() => navigate(`/edit/client/${id}`)}
                         className="primary-btn w-full mt-5 md:mt-0 flex items-center justify-center gap-2"
                     >
                         <MdEdit className="text-[18px] md:text-[20px]" />
-                        <span>Edit Client</span>
+                        <span>{t('forms.client.edit_client')}</span>
                     </button>
                 </div>
 
@@ -284,12 +248,12 @@ const ClientDetails = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="text-xs font-label uppercase tracking-wider text-secondary border-b border-surface-container-highest">
-                                <th className="pb-4 font-medium pl-2">Transaction Details</th>
-                                <th className="pb-4 font-medium">Type</th>
-                                <th className="pb-4 font-medium hidden md:table-cell">Payment Method</th>
-                                <th className="pb-4 font-medium hidden sm:table-cell">Date</th>
-                                <th className="pb-4 font-medium text-center">Actions</th>
-                                <th className="pb-4 font-medium text-right pr-2">Amount</th>
+                                <th className="pb-4 font-medium pl-2 text-left">{t('forms.client.transaction_details')}</th>
+                                <th className="pb-4 font-medium text-left">{t('common.type')}</th>
+                                <th className="pb-4 font-medium hidden md:table-cell text-left">{t('forms.transaction.payment_method')}</th>
+                                <th className="pb-4 font-medium hidden sm:table-cell text-left">{t('forms.transaction.date')}</th>
+                                <th className="pb-4 font-medium text-center">{t('common.actions')}</th>
+                                <th className="pb-4 font-medium text-right pr-2">{t('common.amount')}</th>
                             </tr>
                         </thead>
                         <tbody className="font-body text-sm text-on-surface">
@@ -300,30 +264,23 @@ const ClientDetails = () => {
                                             <span className="font-semibold text-on-surface group-hover:text-primary transition-colors capitalize">
                                                 {formatCategory(trx.category)}
                                             </span>
-                                            <span className="text-xs text-on-surface-variant mt-0.5 whitespace-nowrap">
-                                                {trx.client?.name ?? trx.employee?.name ?? trx.task?.client?.name ?? '—'}
-                                                {trx.transaction_date && (
-                                                    <span className="sm:hidden text-outline-variant/50 mx-1">
-                                                        | {new Date(trx.transaction_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                                    </span>
-                                                )}
-                                            </span>
+
                                         </div>
                                     </td>
                                     <td className="py-4 border-b border-surface-container-high/50">
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium capitalize ${getTypeStyle(trx.type)}`}>
-                                            <span className="mr-1 flex items-center">
+                                            <span className="ltr:mr-1 rtl:ml-1 flex items-center">
                                                 {trx.type === 'income' ? <MdArrowDownward className="text-[12px]" /> : <MdArrowUpward className="text-[12px]" />}
                                             </span>
-                                            {trx.type}
+                                            {t(`options.transaction_type.${trx.type}`)}
                                         </span>
                                     </td>
-                                    <td className="py-4 text-secondary border-b border-surface-container-high/50 capitalize hidden md:table-cell">
-                                        {formatPaymentMethod(trx.payment_method)}
+                                    <td className="py-4 text-secondary border-b border-surface-container-high/50 capitalize hidden md:table-cell text-left">
+                                        {t(`options.payment_method.${trx.payment_method}`) ?? formatPaymentMethod(trx.payment_method)}
                                     </td>
-                                    <td className="py-4 text-on-surface border-b border-surface-container-high/50 hidden sm:table-cell">
+                                    <td className="py-4 text-on-surface border-b border-surface-container-high/50 hidden sm:table-cell text-left">
                                         {trx.transaction_date
-                                            ? new Date(trx.transaction_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                                            ? new Date(trx.transaction_date).toLocaleDateString(i18n.language === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                                             : '—'}
                                     </td>
                                     <td className="py-4 border-b border-surface-container-high/50 text-center">
@@ -339,7 +296,7 @@ const ClientDetails = () => {
                                         </button>
                                     </td>
                                     <td className={`py-4 text-right pr-2 font-medium font-headline text-base border-b border-surface-container-high/50 ${trx.type === 'income' ? 'text-emerald-600' : 'text-error'}`}>
-                                        {trx.type === 'income' ? '+' : '-'}${parseFloat(trx.amount ?? 0).toLocaleString()}
+                                        {trx.type === 'income' ? '+' : '-'}{parseFloat(trx.amount ?? 0).toLocaleString(i18n.language === 'ar' ? 'ar-EG' : 'en-US')} {i18n.language === 'ar' ? 'ج.م' : '$'}
                                     </td>
                                 </tr>
                             )) : (
@@ -347,7 +304,7 @@ const ClientDetails = () => {
                                     <td colSpan="6" className="py-12 text-center text-on-surface-variant">
                                         <div className="flex flex-col items-center gap-2">
                                             <span className="material-symbols-outlined text-[40px] text-outline"> <FaSearchDollar />  </span>
-                                            <p>No transactions found matching your search.</p>
+                                            <p>{t('dashboard.no_transactions')}</p>
                                         </div>
                                     </td>
                                 </tr>

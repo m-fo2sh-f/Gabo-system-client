@@ -6,23 +6,30 @@ import { useNavigate } from 'react-router-dom';
 import { useClients } from '../../hooks/api/useClients';
 import Pagination from '../../components/common/Pagination';
 import { MdPersonSearch } from "react-icons/md";
+import { useTranslation } from 'react-i18next';
+import { getStatusDot } from '../../utils/getStatusStyleIcon';
+import TableSkeleton from '../../components/common/TableSkeleton';
+import { useTaskTypes } from '../../hooks/api/useTaskType';
 
 const Clients = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [search, setSearch] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
+    const [filterTaskType, setFilterTaskType] = useState('all');
     const [page, setPage] = useState(1)
     useEffect(() => {
         setPage(1);
-    }, [search, filterStatus]);
+    }, [search, filterStatus, filterTaskType]);
 
 
 
     const filters = { page };
     if (search) filters.search = search;
     if (filterStatus !== 'all') filters.status = filterStatus;
-
+    if (filterTaskType != 'all') filters.task_type = filterTaskType;
     const { data, isLoading, isError, error } = useClients(filters);
+   
 
     const clients = data?.data.data ?? [];
     const meta = data?.data?.meta;
@@ -30,40 +37,17 @@ const Clients = () => {
         switch (cycle) {
             case 'monthly': return 'bg-secondary-container text-on-secondary-container';
             case 'weakly': return 'bg-surface-container-highest text-primary';
+            case 'weekly': return 'bg-surface-container-highest text-primary';
             case 'once': return 'bg-tertiary-container/20 text-tertiary';
             default: return 'bg-surface-container-high text-on-surface-variant';
         }
     };
 
-    const getStatusDot = (status) => {
-        switch (status) {
-            case 'active': return 'bg-emerald-500';
-            case 'paused': return 'bg-amber-400';
-            case 'stopped': return 'bg-error';
-            default: return 'bg-outline';
-        }
-    };
+
 
     const renderSkeletonRows = () =>
-        Array.from({ length: 4 }).map((_, i) => (
-            <tr key={i} className="animate-pulse">
-                <td className="py-4 pl-2 border-b border-surface-container-high/50">
-                    <div className="h-3 w-32 bg-surface-container-high rounded" />
-                </td>
-                <td className="py-4 border-b border-surface-container-high/50 hidden sm:table-cell">
-                    <div className="h-3 w-28 bg-surface-container-high rounded" />
-                </td>
-                <td className="py-4 border-b border-surface-container-high/50">
-                    <div className="h-5 w-16 bg-surface-container-high rounded-full" />
-                </td>
-                <td className="py-4 border-b border-surface-container-high/50 hidden md:table-cell">
-                    <div className="h-5 w-16 bg-surface-container-high rounded-full" />
-                </td>
-                <td className="py-4 border-b border-surface-container-high/50 hidden lg:table-cell">
-                    <div className="h-3 w-20 bg-surface-container-high rounded ml-auto" />
-                </td>
-            </tr>
-        ));
+        <TableSkeleton rows={4} cols={5} />
+
 
     return (
         <div className="space-y-6">
@@ -71,8 +55,8 @@ const Clients = () => {
                 {/* Toolbar */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                     <div>
-                        <h3 className="font-headline text-2xl font-bold text-on-surface">Clients Database</h3>
-                        <p className="text-sm text-on-surface-variant mt-1">Manage and track your client relationships.</p>
+                        <h3 className="font-headline text-2xl font-bold text-on-surface">{t('tables.clients_database')}</h3>
+                        <p className="text-sm text-on-surface-variant mt-1">{t('tables.clients_subtitle_desc')}</p>
                     </div>
                     <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
                         <select
@@ -85,6 +69,7 @@ const Clients = () => {
                             <option value="paused">Paused</option>
                             <option value="stopped">Stopped</option>
                         </select>
+                       
 
                         <div className="relative w-full sm:w-auto">
                             <Input

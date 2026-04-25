@@ -6,11 +6,13 @@ import { useNavigate } from 'react-router-dom';
 import { useTransactions } from '../../hooks/api/useTransactions';
 import Pagination from '../../components/common/Pagination';
 import { FaSearchDollar } from "react-icons/fa";
+import { useTranslation } from 'react-i18next';
+import TableSkeleton from '../../components/common/TableSkeleton';
 
-
-
+import { formatPaymentMethod, formatCategory, getTypeStyle } from '../../utils/formatters';
 
 const Transactions = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [search, setSearch] = useState('');
     const [filterType, setFilterType] = useState('all');
@@ -25,41 +27,8 @@ const Transactions = () => {
     const meta = data?.data?.meta;
 
 
-    const getTypeStyle = (type) => {
-        return type === 'income'
-            ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
-            : 'bg-error/10 text-error border border-error/20';
-    };
-
-    const formatCategory = (category) =>
-        (category ?? '').replace(/_/g, ' ');
-
-    const formatPaymentMethod = (method) =>
-        (method ?? '').replace(/_/g, ' ');
-
     const renderSkeletonRows = () =>
-        Array.from({ length: 4 }).map((_, i) => (
-            <tr key={i} className="animate-pulse">
-                <td className="py-4 pl-2 border-b border-surface-container-high/50">
-                    <div className="space-y-2">
-                        <div className="h-3 w-32 bg-surface-container-high rounded" />
-                        <div className="h-2 w-24 bg-surface-container-high rounded" />
-                    </div>
-                </td>
-                <td className="py-4 border-b border-surface-container-high/50">
-                    <div className="h-5 w-16 bg-surface-container-high rounded-full" />
-                </td>
-                <td className="py-4 border-b border-surface-container-high/50 hidden md:table-cell">
-                    <div className="h-3 w-20 bg-surface-container-high rounded" />
-                </td>
-                <td className="py-4 border-b border-surface-container-high/50 hidden sm:table-cell">
-                    <div className="h-3 w-20 bg-surface-container-high rounded" />
-                </td>
-                <td className="py-4 text-right pr-2 border-b border-surface-container-high/50">
-                    <div className="h-3 w-16 bg-surface-container-high rounded ml-auto" />
-                </td>
-            </tr>
-        ));
+        <TableSkeleton rows={4} cols={5} />
 
     return (
         <div className="space-y-6">
@@ -67,8 +36,8 @@ const Transactions = () => {
                 {/* Toolbar */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                     <div>
-                        <h3 className="font-headline text-2xl font-bold text-on-surface">Transactions History</h3>
-                        <p className="text-sm text-on-surface-variant mt-1">Review your income and expenses.</p>
+                        <h3 className="font-headline text-2xl font-bold text-on-surface">{t('tables.transactions_database')}</h3>
+                        <p className="text-sm text-on-surface-variant mt-1">{t('tables.transactions_subtitle_desc')}</p>
                     </div>
                     <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
                         <select
@@ -122,7 +91,7 @@ const Transactions = () => {
                                                 {formatCategory(trx.category)}
                                             </span>
                                             <span className="text-xs text-on-surface-variant mt-0.5 whitespace-nowrap">
-                                                {trx.client?.name ?? trx.employee?.name ?? trx.task?.client?.name ?? '—'}
+                                                {trx.client?.name ?? trx.employee?.name ?? trx.task?.client?.name ?? ''}
                                                 {trx.transaction_date && (
                                                     <span className="sm:hidden text-outline-variant/50 mx-1">
                                                         | {new Date(trx.transaction_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}

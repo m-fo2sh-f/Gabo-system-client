@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import { MdOutlineAccountBalanceWallet, MdTrendingUp, MdTrendingDown, MdAssignment, MdPeopleAlt, MdStar } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useGetDashboard } from '../../hooks/api/useGetDashboard';
 
 
@@ -12,9 +13,10 @@ const COLORS = ['var(--primary)', 'var(--secondary)', 'var(--tertiary)', 'var(--
 
 const Dashboard = () => {
     const navigate = useNavigate();
+    const { t, i18n } = useTranslation();
+    const lang = i18n.language;
     const { data, isLoading, error } = useGetDashboard();
     const dashboardData = data?.data;
-    console.log(JSON.stringify(dashboardData, null, 2));
 
     const dynamicMonthlyData = dashboardData?.monthlyStats || [];
     const expenseData = (dashboardData?.expenseSources || []).map((item, index) => ({
@@ -36,7 +38,7 @@ const Dashboard = () => {
     if (error) {
         return (
             <div className="flex items-center justify-center h-64 text-error">
-                <p>Failed to load dashboard data.</p>
+                <p>{t('dashboard.failed_load')}</p>
             </div>
         );
     }
@@ -49,46 +51,46 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-surface-container-lowest rounded-xl p-4 sm:p-5 shadow-[0px_10px_20px_rgba(19,27,46,0.02)] border border-outline-variant/10 flex flex-col justify-center">
                     <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Total Income</span>
+                        <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{t('dashboard.total_income')}</span>
                         <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600">
                             <MdTrendingUp size={18} />
                         </div>
                     </div>
                     <h4 className="font-headline text-2xl font-bold text-on-surface">${dashboardData?.totalIncome?.total_income?.toLocaleString() || 0}</h4>
                     <span className={`text-xs font-medium mt-1 ${dashboardData?.totalIncome?.is_positive ? 'text-emerald-600' : 'text-error'}`}>
-                        {dashboardData?.totalIncome?.percentage_change > 0 ? '+' : ''}{dashboardData?.totalIncome?.percentage_change}% from last month
+                        {dashboardData?.totalIncome?.percentage_change > 0 ? '+' : ''}{t('dashboard.from_last_month', { percent: dashboardData?.totalIncome?.percentage_change })}
                     </span>
                 </div>
 
                 <div className="bg-surface-container-lowest rounded-xl p-4 sm:p-5 shadow-[0px_10px_20px_rgba(19,27,46,0.02)] border border-outline-variant/10 flex flex-col justify-center">
                     <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Total Expenses</span>
+                        <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{t('dashboard.total_expenses')}</span>
                         <div className="w-8 h-8 rounded-full bg-error/10 flex items-center justify-center text-error">
                             <MdTrendingDown size={18} />
                         </div>
                     </div>
                     <h4 className="font-headline text-2xl font-bold text-on-surface">${dashboardData?.totalExpense?.total_expense?.toLocaleString() || 0}</h4>
                     <span className={`text-xs font-medium mt-1 ${dashboardData?.totalExpense?.is_positive ? 'text-emerald-600' : 'text-error'}`}>
-                        {dashboardData?.totalExpense?.percentage_change > 0 ? '+' : ''}{dashboardData?.totalExpense?.percentage_change}% from last month
+                        {dashboardData?.totalExpense?.percentage_change > 0 ? '+' : ''}{t('dashboard.from_last_month', { percent: dashboardData?.totalExpense?.percentage_change })}
                     </span>
                 </div>
 
                 <div className="bg-surface-container-lowest rounded-xl p-4 sm:p-5 shadow-[0px_10px_20px_rgba(19,27,46,0.02)] border border-outline-variant/10 flex flex-col justify-center">
                     <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Net Profit</span>
+                        <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{t('dashboard.net_profit')}</span>
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                             <MdOutlineAccountBalanceWallet size={18} />
                         </div>
                     </div>
                     <h4 className={`font-headline text-2xl font-bold ${dashboardData?.netProfit?.net_profit < 0 ? 'text-error' : 'text-emerald-600'}`}>${dashboardData?.netProfit?.net_profit?.toLocaleString() || 0}</h4>
                     <span className={`text-xs font-medium mt-1 ${dashboardData?.netProfit?.is_positive ? 'text-emerald-600' : 'text-error'}`}>
-                        {dashboardData?.netProfit?.percentage_change > 0 ? '+' : ''}{dashboardData?.netProfit?.percentage_change}% from last month
+                        {dashboardData?.netProfit?.percentage_change > 0 ? '+' : ''}{t('dashboard.from_last_month', { percent: dashboardData?.netProfit?.percentage_change })}
                     </span>
                 </div>
 
                 <div className="bg-surface-container-lowest rounded-xl p-4 sm:p-5 shadow-[0px_10px_20px_rgba(19,27,46,0.02)] border border-outline-variant/10 flex flex-col justify-center">
                     <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Active Tasks</span>
+                        <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{t('dashboard.active_tasks')}</span>
                         <div className="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
                             <MdAssignment size={18} />
                         </div>
@@ -101,7 +103,7 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 ">
                 {/* Area Chart: Income vs Expense */}
                 <div className="bg-surface-container-lowest rounded-xl p-4 sm:p-6 shadow-[0px_20px_40px_rgba(19,27,46,0.02)] border border-outline-variant/20 lg:col-span-2">
-                    <h3 className="font-headline text-lg font-bold text-on-surface mb-4 sm:mb-6">Income vs Expenses</h3>
+                    <h3 className="font-headline text-lg font-bold text-on-surface mb-4 sm:mb-6">{t('dashboard.income_vs_expenses')}</h3>
                     <div className="w-full h-fit">
                         <ResponsiveContainer width="100%" height="300">
                             <AreaChart data={dynamicMonthlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -131,7 +133,7 @@ const Dashboard = () => {
 
                 {/* Donut Chart: Expenses Breakdown */}
                 <div className="bg-surface-container-lowest rounded-xl h-fit p-4 sm:p-6 shadow-[0px_20px_40px_rgba(19,27,46,0.02)] border border-outline-variant/20 flex flex-col">
-                    <h3 className="font-headline text-lg font-bold text-on-surface mb-4">Expenses by Category</h3>
+                    <h3 className="font-headline text-lg font-bold text-on-surface mb-4">{t('dashboard.expenses_by_category')}</h3>
                     <div className="w-full h-[280px]">
                         <ResponsiveContainer width="100%" height="280">
                             <PieChart>
@@ -172,27 +174,27 @@ const Dashboard = () => {
                 <div className="flex flex-col md:flex-col  gap-4">
                     <div className="bg-surface-container-lowest rounded-xl p-4 sm:p-5 shadow-[0px_10px_20px_rgba(19,27,46,0.02)] border border-outline-variant/10 flex flex-col justify-center flex-1">
                         <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Clients</span>
+                            <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{t('common.clients')}</span>
                             <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600">
                                 <MdPeopleAlt size={18} />
                             </div>
                         </div>
-                        <h4 className="font-headline text-2xl font-bold text-on-surface">{dashboardData?.numberOfClients || 0} Clients</h4>
+                        <h4 className="font-headline text-2xl font-bold text-on-surface">{t('dashboard.clients_count', { count: dashboardData?.numberOfClients || 0 })}</h4>
                     </div>
 
                     <div className="bg-surface-container-lowest rounded-xl p-4 sm:p-5 shadow-[0px_10px_20px_rgba(19,27,46,0.02)] border border-outline-variant/10 flex flex-col justify-center flex-1">
                         <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Outstanding Balance</span>
+                            <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{t('dashboard.outstanding_balance')}</span>
                             <div className="w-8 h-8 rounded-full bg-error/10 flex items-center justify-center text-error">
                                 <MdTrendingDown size={18} />
                             </div>
                         </div>
                         <h4 className="font-headline text-2xl font-bold text-on-surface">- ${dashboardData?.lateAmountMoney?.total_amount?.toLocaleString() || 0}</h4>
-                        <span className="text-xs text-error font-medium mt-1">from {dashboardData?.lateAmountMoney?.clients_count || 0} Client{dashboardData?.lateAmountMoney?.clients_count !== 1 ? 's' : ''}</span>
+                        <span className="text-xs text-error font-medium mt-1">{t('dashboard.from_clients', { count: dashboardData?.lateAmountMoney?.clients_count || 0 })}</span>
                     </div>
                     <div className="bg-surface-container-lowest rounded-xl p-4 sm:p-5 shadow-[0px_10px_20px_rgba(19,27,46,0.02)] border border-outline-variant/10 flex flex-col flex-1">
                         <div className="flex items-center justify-between mb-4">
-                            <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Top Performers</span>
+                            <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{t('dashboard.top_performers')}</span>
                             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                                 <MdStar size={18} />
                             </div>
@@ -208,13 +210,13 @@ const Dashboard = () => {
                                 </div>
                             ))}
                             {topEmployees.length === 0 && (
-                                <div className="text-sm text-on-surface-variant">No top performers found</div>
+                                <div className="text-sm text-on-surface-variant">{t('dashboard.no_performers')}</div>
                             )}
                         </div>
                     </div>
                 </div>
                 <div className="bg-surface-container-lowest rounded-xl p-4 sm:p-6 shadow-[0px_20px_40px_rgba(19,27,46,0.02)] border border-outline-variant/20 lg:col-span-2 flex flex-col">
-                    <h3 className="font-headline text-lg font-bold text-on-surface mb-6">Most Profitable Services</h3>
+                    <h3 className="font-headline text-lg font-bold text-on-surface mb-6">{t('dashboard.most_profitable_services')}</h3>
                     <div className="w-full flex-1 h-fit">
                         <ResponsiveContainer width="100%" height="280">
                             <BarChart data={profitableServicesData} margin={{ top: 0, right: 10, left: 10, bottom: 0 }}>
@@ -222,7 +224,7 @@ const Dashboard = () => {
                                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--on-surface-variant)', fontSize: 12, fontFamily: 'inherit' }} dy={10} />
                                 <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--on-surface-variant)', fontSize: 12 }} tickFormatter={(val) => `$${val.toLocaleString()}`} />
                                 <RechartsTooltip
-                                    formatter={(value) => [`$${value.toLocaleString()}`, 'Revenue']}
+                                    formatter={(value) => [`$${value.toLocaleString()}`, t('dashboard.revenue')]}
                                     contentStyle={{ backgroundColor: 'var(--surface-container)', borderColor: 'var(--outline-variant)', borderRadius: '8px', color: 'var(--on-surface)' }}
                                     itemStyle={{ color: 'var(--on-surface)' }}
                                     cursor={{ fill: 'var(--surface-container-highest)', opacity: 0.4 }}
@@ -236,17 +238,17 @@ const Dashboard = () => {
             {/* Recent Transactions Table */}
             <div className="bg-surface-container-lowest rounded-xl p-4 sm:p-6 shadow-[0px_20px_40px_rgba(19,27,46,0.02)] border border-outline-variant/20 overflow-hidden">
                 <div className="flex items-center justify-between mb-4 sm:mb-6">
-                    <h3 className="font-headline text-lg font-bold text-on-surface">Recent Transactions</h3>
-                    <button className="text-xs font-semibold text-primary hover:text-primary-container transition-colors">View All</button>
+                    <h3 className="font-headline text-lg font-bold text-on-surface">{t('dashboard.recent_transactions')}</h3>
+                    <button className="text-xs font-semibold text-primary hover:text-primary-container transition-colors" onClick={() => navigate('/transactions')}>{t('common.view_all')}</button>
                 </div>
                 <div className="w-full overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="text-xs font-label uppercase tracking-wider text-secondary border-b border-surface-container-highest">
-                                <th className="pb-4 font-medium pl-2">Transaction Details</th>
-                                <th className="pb-4 font-medium">Type</th>
-                                <th className="pb-4 font-medium hidden sm:table-cell">Date</th>
-                                <th className="pb-4 font-medium text-right pr-2">Amount</th>
+                                <th className="pb-4 font-medium pl-2">{t('dashboard.transaction_details')}</th>
+                                <th className="pb-4 font-medium">{t('common.type')}</th>
+                                <th className="pb-4 font-medium hidden sm:table-cell">{t('common.date')}</th>
+                                <th className="pb-4 font-medium text-right pr-2">{t('common.amount')}</th>
                             </tr>
                         </thead>
                         <tbody className="font-body text-sm text-on-surface">
@@ -258,7 +260,7 @@ const Dashboard = () => {
                                                 {trx.category.replace('_', ' ')}
                                             </span>
                                             <span className="text-xs text-on-surface-variant mt-0.5 sm:whitespace-nowrap flex flex-wrap items-center gap-x-1">
-                                                <span>{trx.related_to}</span>
+                                                <span>{trx.related_to || ""}</span>
                                                 <span className="sm:hidden text-outline-variant/50">|</span>
                                                 <span className="sm:hidden">{trx.date.substring(0, 6)}</span>
                                             </span>

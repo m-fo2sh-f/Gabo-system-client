@@ -13,14 +13,15 @@ export const useTransactions = (filters = {}) => {
   });
 };
 
-export const useTransaction = (id) => {
+export const useTransaction = (id, params = {}, options = {}) => {
   return useQuery({
-    queryKey: [...QUERY_KEY, id],
+    queryKey: [...QUERY_KEY, id, params],
     queryFn: async () => {
-      const { data } = await axiosInstance.get(`/v1/transactions/${id}`);
+      const { data } = await axiosInstance.get(`/v1/transactions/${id}`, { params });
       return data;
     },
     enabled: !!id,
+    ...options,
   });
 };
 
@@ -30,9 +31,16 @@ export const useCreateTransaction = () => {
     mutationFn: async (newTransaction) => {
       const { data } = await axiosInstance.post('/v1/transactions', newTransaction);
       return data;
+
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] }); // <--- اللغم الأول اتفك
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] }); // <--- ربط الداشبورد
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+
+      // السطر ده خاص بالـ Update بس عشان يحدث الـ Cache بتاع المعاملة نفسها
+
     },
   });
 };
@@ -45,9 +53,17 @@ export const useUpdateTransaction = () => {
       return data;
     },
     onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] }); // <--- اللغم الأول اتفك
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] }); // <--- ربط الداشبورد
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-      queryClient.invalidateQueries({ queryKey: [...QUERY_KEY, variables.id] });
+
+      // السطر ده خاص بالـ Update بس عشان يحدث الـ Cache بتاع المعاملة نفسها
+      if (variables?.id) {
+        queryClient.invalidateQueries({ queryKey: [...QUERY_KEY, variables.id] });
+      }
     },
+
   });
 };
 
@@ -56,10 +72,17 @@ export const useDeleteTransaction = () => {
   return useMutation({
     mutationFn: async (id) => {
       const { data } = await axiosInstance.delete(`/v1/transactions/${id}`);
+
       return data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] }); // <--- اللغم الأول اتفك
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] }); // <--- ربط الداشبورد
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+
+      // السطر ده خاص بالـ Update بس عشان يحدث الـ Cache بتاع المعاملة نفسها
+
     },
   });
 };

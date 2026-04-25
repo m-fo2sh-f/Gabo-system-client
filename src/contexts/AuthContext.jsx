@@ -35,10 +35,9 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const loginUser = (userData) => {
-        setUser(userData.user);
+
         localStorage.setItem('access_token', userData.access_token);
         setIsAuthenticated(true);
-
     };
 
     const logoutUser = async () => {

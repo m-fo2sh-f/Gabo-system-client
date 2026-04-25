@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
 import Input from '../../components/common/input'
 import useJobTitles, { useCreateJobTitle, useDeleteJobTitle } from '../../hooks/api/useJobTitles'
 import toast from 'react-hot-toast'
 import DeleteModel from "../../components/common/DeleteModel";
-import { MdDelete, MdPersonSearch } from 'react-icons/md'
+import { MdDelete, MdPersonSearch, MdSave } from 'react-icons/md'
 
 const JobTitle = () => {
     const [deletingItem, setDeletingItem] = useState(null);
+    const { t } = useTranslation();
     const {
         register,
         handleSubmit,
@@ -30,7 +32,7 @@ const JobTitle = () => {
     const onSubmit = async (data) => {
         try {
             await createJobTitle(data);
-            toast.success('Job title created successfully!');
+            toast.success(t('forms.employee.create_success'));
             listRefetch();
             reset(); // Clear form after addition
         } catch {
@@ -41,7 +43,7 @@ const JobTitle = () => {
     const handleDelete = async () => {
         try {
             await deleteJobTitle(deletingItem.id);
-            toast.success('Job title deleted successfully!');
+            toast.success(t('forms.employee.delete_success'));
             setDeletingItem(null);
             listRefetch();
         } catch {
@@ -74,16 +76,16 @@ const JobTitle = () => {
         <>
             <form onSubmit={handleSubmit(onSubmit)}>
                 <Input
-                    label="Job Title"
-                    placeholder="Enter Job Title"
+                    label={t('forms.employee.job_title')}
+                    placeholder={t('forms.employee.enter_job_title')}
                     disabled={isPending}
-                    {...register('name', { required: 'Job title is required' })}
+                    {...register('name', { required: t('forms.validation.required') })}
                     error={errors.name?.message}
                 />
                 {/* API Error */}
                 {apiError && (
                     <div className="rounded-lg bg-error/10 border border-error/20 text-error text-sm px-4 py-3">
-                        {apiError?.response?.data?.message ?? 'Something went wrong. Please try again.'}
+                        {apiError?.response?.data?.message ?? t('common.failure')}
                     </div>
                 )}
 
@@ -97,11 +99,12 @@ const JobTitle = () => {
                         {isPending ? (
                             <>
                                 <span className="w-4 h-4 border-2 border-on-primary/30 border-t-on-primary rounded-full animate-spin" />
-                                Saving...
+                                {t('forms.client.saving')}
                             </>
                         ) : (
                             <>
-                                Save Job Title
+                                <span className="material-symbols-outlined text-[18px]"><MdSave /></span>
+                                {t('forms.employee.save_job_title')}
                             </>
                         )}
                     </button>
@@ -111,9 +114,9 @@ const JobTitle = () => {
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="text-xs font-label uppercase tracking-wider text-secondary border-b border-surface-container-highest">
-                            <th className="pb-4 font-medium pl-2">ID</th>
-                            <th className="pb-4 font-medium pl-2">Job Title</th>
-                            <th className="pb-4 font-medium text-center pr-2 w-10">Actions</th>
+                            <th className="pb-4 font-medium pl-2 text-left">{t('common.id')}</th>
+                            <th className="pb-4 font-medium pl-2 text-left">{t('forms.employee.job_title')}</th>
+                            <th className="pb-4 font-medium text-center pr-2 w-10">{t('common.actions')}</th>
                         </tr>
                     </thead>
                     <tbody className="font-body text-sm text-on-surface">
@@ -142,7 +145,7 @@ const JobTitle = () => {
                                 <td colSpan="3" className="py-12 text-center text-on-surface-variant">
                                     <div className="flex flex-col items-center gap-2">
                                         <MdPersonSearch className="text-[40px] text-outline" />
-                                        <p>No job titles found.</p>
+                                        <p>{t('common.no_data')}</p>
                                     </div>
                                 </td>
                             </tr>
@@ -163,4 +166,4 @@ const JobTitle = () => {
     )
 }
 
-export default JobTitle
+export default JobTitle

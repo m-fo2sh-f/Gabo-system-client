@@ -13,14 +13,15 @@ export const useEmployees = (filters = {}) => {
   });
 };
 
-export const useEmployee = (id) => {
+export const useEmployee = (id, params = {}, options = {}) => {
   return useQuery({
-    queryKey: [...QUERY_KEY, id],
+    queryKey: [...QUERY_KEY, id, params],
     queryFn: async () => {
-      const { data } = await axiosInstance.get(`/v1/employees/${id}`);
+      const { data } = await axiosInstance.get(`/v1/employees/${id}`, { params });
       return data;
     },
     enabled: !!id,
+    ...options,
   });
 };
 

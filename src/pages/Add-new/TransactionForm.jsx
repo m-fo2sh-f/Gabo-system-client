@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -9,14 +10,17 @@ import { useCreateTransaction, useUpdateTransaction, useTransaction } from '../.
 import { useClients } from '../../hooks/api/useClients';
 import { useEmployees } from '../../hooks/api/useEmployees';
 import { useTasks } from '../../hooks/api/useTasks';
+import { MdSave } from "react-icons/md";
+import SearchableSelect from '../../components/common/SearchableSelect';
 
 const TransactionForm = () => {
     const { id } = useParams();
     const isEdit = !!id;
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     // 1. Core Form Setup
-    const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm({
+    const { register, handleSubmit, watch, setValue, reset, control, formState: { errors } } = useForm({
         defaultValues: {
             type: 'income',
             category: '',
@@ -33,7 +37,7 @@ const TransactionForm = () => {
     // Transaction Queries
     const { mutateAsync: createTransaction, isPending: isCreating, error: createError } = useCreateTransaction();
     const { mutateAsync: updateTransaction, isPending: isUpdating, error: updateError } = useUpdateTransaction();
-    const { data: transactionData, isLoading: isLoadingInitial } = useTransaction(id, { enabled: isEdit });
+    const { data: transactionData, isLoading: isLoadingInitial } = useTransaction(id, {}, { enabled: isEdit });
 
     const isPending = isCreating || isUpdating;
     const apiError = createError || updateError;
@@ -44,13 +48,11 @@ const TransactionForm = () => {
     const needsTasks = category === 'task_payment';
 
     // 3. Related Data Fetching
-    const { data: clientsData } = useClients({}, { enabled: needsClients });
-    const { data: employeesData } = useEmployees({}, { enabled: needsEmployees });
-    const { data: tasksData } = useTasks({ status: 'pending' }, { enabled: needsTasks });
-    console.log('clientsData', clientsData);
-    console.log('employeesData', employeesData);
-    console.log('tasksData', tasksData);
+    const { data: clientsData } = useClients({ per_page: 'all' }, { enabled: needsClients });
+    const { data: employeesData } = useEmployees({ per_page: 'all' }, { enabled: needsEmployees });
+    const { data: tasksData } = useTasks({ status: 'pending', per_page: 'all' }, { enabled: needsTasks })
 
+    
     // 4. Dropdown Option Mappings
     const clientOptions = useMemo(() =>
         (clientsData?.data?.data ?? []).map(c => ({ value: String(c.id), label: c.name })),
@@ -65,14 +67,16 @@ const TransactionForm = () => {
         const safeArray = Array.isArray(rawData) ? rawData : [];
         return safeArray.map(t => ({
             value: String(t.id),
-            label: `${t.client?.name ?? 'Task'} #${t.id}`
+            label: `${t.name} - $${transactionType === 'income' ? t.price : t.cost}`
         }));
-    }, [tasksData])
+    }, [tasksData, transactionType])
+
+
 
     //task
     useEffect(() => {
-        if (category === 'task_payment' && selectedTaskId && tasksData) {
-            // بنجيب الـ Array بتاعة التاسكات زي ما أنت عامل فوق بالظبط
+        if (category === 'task_payment' && transactionType === 'income' && selectedTaskId && tasksData) {
+
             const rawTasks = tasksData?.data?.data || tasksData?.data || [];
             const safeTasks = Array.isArray(rawTasks) ? rawTasks : [];
 
@@ -145,32 +149,38 @@ const TransactionForm = () => {
                 amount: parseFloat(data.amount),
                 payment_method: data.payment_method,
                 transaction_date: data.transaction_date,
-                notes: data.notes,
+                notes: data.notes || null
+
             };
             if (data.type === 'income') {
                 if (data.category === 'task_payment') {
-                    payload.task_id = parseInt(data.task_id);
+                    // حماية من الـ NaN
+                    payload.task_id = parseInt(data.task_id) || null;
                 } else if (data.category === 'manual_collection') {
-                    payload.collector_id = parseInt(data.collector_id);
-                    payload.client_id = parseInt(data.client_id);
+                    payload.collector_id = parseInt(data.collector_id) || null;
+                    payload.client_id = parseInt(data.client_id) || null;
                 }
             } else if (data.type === 'expense') {
                 if (data.category === 'salary') {
-                    payload.employee_id = parseInt(data.employee_id);
+                    payload.employee_id = parseInt(data.employee_id) || null;
+                } else if (data.category === 'task_payment') {
+                    payload.task_id = parseInt(data.task_id) || null;
                 } else if (data.category === 'ads') {
-                    payload.client_id = parseInt(data.client_id);
+                    payload.client_id = parseInt(data.client_id) || null;
                 }
             }
             if (isEdit) {
                 await updateTransaction({ id, ...payload });
-                toast.success('Transaction updated successfully!');
+                toast.success(t('forms.transaction.update_success'));
                 navigate(`/details/transaction/${id}`);
+
+
             } else {
                 await createTransaction(payload);
-                toast.success('Transaction created successfully!');
+                toast.success(t('forms.transaction.create_success'));
                 navigate('/transactions');
             }
-            reset();
+
         } catch {
         }
     };
@@ -194,109 +204,132 @@ const TransactionForm = () => {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Type */}
+
                 <Select
-                    label="Transaction Type"
+                    label={t('forms.transaction.type')}
+                    disabled={isEdit}
                     options={[
-                        { value: 'income', label: 'Income' },
-                        { value: 'expense', label: 'Expense' }
+                        { value: 'income', label: t('options.transaction_type.income') },
+                        { value: 'expense', label: t('options.transaction_type.expense') }
                     ]}
-                    {...register('type', { required: 'Transaction type is required' })}
+                    {...register('type', { required: t('forms.validation.required') })}
                     error={errors.type?.message}
                 />
 
                 {/* Category (dynamic) */}
                 <Select
-                    label="Category"
-                    options={transactionType === 'income' ? incomeCategoryOptions : expenseCategoryOptions}
-                    placeholder="Select Category"
-                    {...register('category', { required: 'Category is required' })}
+                    label={t('common.category')}
+                    disabled={isEdit}
+
+                    options={transactionType === 'income'
+                        ? incomeCategoryOptions.map(opt => ({ ...opt, label: t(`options.income_category.${opt.value}`) }))
+                        : expenseCategoryOptions.map(opt => ({ ...opt, label: t(`options.expense_category.${opt.value}`) }))}
+                    placeholder={t('common.category')}
+                    {...register('category', { required: t('forms.validation.required') })}
                     error={errors.category?.message}
                 />
 
                 {/* Conditional fields */}
                 {category === 'task_payment' && (
-                    <Select
-                        label="Task"
+                    <SearchableSelect
+                        name="task_id"
+                        control={control}
+                        label={t('forms.transaction.task')}
                         options={taskOptions}
-                        placeholder="Select Task"
-                        {...register('task_id', { required: 'Task is required' })}
+                        placeholder={t('forms.transaction.select_task')}
+                        rules={{ required: t('forms.validation.required') }}
                         error={errors.task_id?.message}
+                        disabled={isEdit}
                     />
                 )}
 
                 {category === 'manual_collection' && (
                     <>
-                        <Select
-                            label="Collector (Employee)"
+                        <SearchableSelect
+                            name="collector_id"
+                            control={control}
+                            label={t('forms.transaction.collector')}
                             options={employeeOptions}
-                            placeholder="Select Collector"
-                            {...register('collector_id', { required: 'Collector is required' })}
+                            placeholder={t('forms.transaction.select_collector')}
+                            rules={{ required: t('forms.validation.required') }}
                             error={errors.collector_id?.message}
+                            disabled={isEdit}
                         />
-                        <Select
-                            label="Client"
+                        <SearchableSelect
+                            name="client_id"
+                            control={control}
+                            label={t('forms.transaction.client')}
                             options={clientOptions}
-                            placeholder="Select Client"
-                            {...register('client_id', { required: 'Client is required' })}
+                            placeholder={t('forms.task.select_client')}
+                            rules={{ required: t('forms.validation.required') }}
                             error={errors.client_id?.message}
+                            disabled={isEdit}
                         />
                     </>
                 )}
 
                 {category === 'salary' && (
-                    <Select
-                        label="Employee"
+                    <SearchableSelect
+                        name="employee_id"
+                        control={control}
+                        label={t('forms.transaction.employee')}
                         options={employeeOptions}
-                        placeholder="Select Employee"
-                        {...register('employee_id', { required: 'Employee is required' })}
+                        placeholder={t('forms.task.select_employee')}
+                        rules={{ required: t('forms.validation.required') }}
                         error={errors.employee_id?.message}
+                        disabled={isEdit}
                     />
                 )}
 
                 {category === 'ads' && (
-                    <Select
-                        label="Client"
+                    <SearchableSelect
+                        name="client_id"
+                        control={control}
+                        label={t('forms.transaction.client')}
                         options={clientOptions}
-                        placeholder="Select Client"
-                        {...register('client_id', { required: 'Client is required for Ads expense' })}
+                        placeholder={t('forms.task.select_client')}
+                        rules={{ required: t('forms.validation.required') }}
                         error={errors.client_id?.message}
+                        disabled={isEdit}
                     />
                 )}
 
-                {/* Amount */}
                 <Input
                     label="Amount"
-                    type="number"
-                    placeholder="0.00"
-
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="5000 EGP"
+                    disabled={isEdit}
                     {...register('amount', {
                         required: 'Amount is required',
                         min: { value: 0.01, message: 'Must be > 0' },
+                        pattern: { value: /^[0-9]+(\.[0-9]+)?$/, message: 'Please enter a valid number' }
                     })}
                     error={errors.amount?.message}
                 />
 
+
                 {/* Payment Method */}
                 <Select
-                    label="Payment Method"
-                    options={paymentMethodOptions}
+                    label={t('forms.transaction.payment_method')}
+                    options={paymentMethodOptions.map(opt => ({ ...opt, label: t(`options.payment_method.${opt.value}`) }))}
                     {...register('payment_method')}
                     error={errors.payment_method?.message}
                 />
 
                 {/* Date */}
                 <Input
-                    label="Transaction Date"
+                    label={t('forms.transaction.date')}
                     type="date"
-                    {...register('transaction_date', { required: 'Transaction date is required' })}
+                    {...register('transaction_date', { required: t('forms.validation.required') })}
                     error={errors.transaction_date?.message}
                 />
             </div>
 
             <Input
-                label="Notes"
+                label={t('common.notes')}
                 type="textarea"
-                placeholder="Enter any additional notes here..."
+                placeholder={t('forms.client.notes_placeholder')}
                 rows={4}
                 {...register('notes')}
             />
@@ -304,7 +337,7 @@ const TransactionForm = () => {
             {/* API Error */}
             {apiError && (
                 <div className="rounded-lg bg-error/10 border border-error/20 text-error text-sm px-4 py-3">
-                    {apiError?.response?.data?.message ?? 'Something went wrong. Please try again.'}
+                    {apiError?.response?.data?.message ?? t('common.failure')}
                 </div>
             )}
 
@@ -318,12 +351,12 @@ const TransactionForm = () => {
                     {isPending ? (
                         <>
                             <span className="w-4 h-4 border-2 border-on-primary/30 border-t-on-primary rounded-full animate-spin" />
-                            Saving...
+                            {t('forms.client.saving')}
                         </>
                     ) : (
                         <>
-                            <span className="material-symbols-outlined text-[18px]">save</span>
-                            {isEdit ? 'Update Transaction' : 'Save Transaction'}
+                            <span className="material-symbols-outlined text-[18px]"><MdSave /></span>
+                            {isEdit ? t('forms.transaction.update_btn') : t('forms.transaction.save_btn')}
                         </>
                     )}
                 </button>

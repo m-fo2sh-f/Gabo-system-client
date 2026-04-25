@@ -40,7 +40,7 @@ const Input = forwardRef(({
                     />
                 </div>
             ) : (
-                <div className={`bg-surface-container-low rounded-xl px-4 py-3 flex items-center transition-colors ghost-border ${error ? '!border-error' : ''} ${className}`}>
+                <div className={`${nativeProps.disabled ? 'bg-transparent' : 'bg-surface-container-low'} rounded-xl px-4 py-3 flex items-center transition-colors ghost-border ${error ? '!border-error' : ''} ${className}`}>
                     {prefix && (
                         <span className="text-on-surface-variant text-lg font-headline font-bold mr-2">
                             {prefix}
@@ -51,7 +51,7 @@ const Input = forwardRef(({
                         type={type}
                         defaultValue={defaultValue}
                         placeholder={placeholder}
-                        className={`bg-transparent border-none focus:ring-0 text-sm text-on-surface w-full placeholder:text-on-surface-variant/50 placeholder:font-normal p-0 outline-none font-normal ${inputClassName}`}
+                        className={`bg-transparent border-nonefocus:ring-0 text-sm text-on-surface w-full placeholder:text-on-surface-variant/50 placeholder:font-normal p-0 outline-none font-normal ${inputClassName}`}
                         {...nativeProps}
                     />
                 </div>

@@ -1,5 +1,6 @@
 import { forwardRef } from 'react';
 import { IoCaretDownSharp } from "react-icons/io5";
+import { useTranslation } from 'react-i18next';
 
 const Select = forwardRef(({
     label,
@@ -10,6 +11,8 @@ const Select = forwardRef(({
     placeholder = 'Select an option',
     ...rest // دي بتلم الـ name والـ onChange والـ onBlur اللي جايين من الـ register
 }, ref) => {
+    const { i18n } = useTranslation();
+    const lang = i18n.language;
     return (
         <div className={`w-full max-w-full flex flex-col gap-1 ${wrapperClassName}`}>
             {/* 1. العنوان */}
@@ -24,16 +27,14 @@ const Select = forwardRef(({
                 <select
                     ref={ref}
                     {...rest}
-                    className={`w-full max-w-full truncate appearance-none bg-surface-container-low text-on-surface text-xs sm:text-sm font-medium rounded-xl px-3 py-2 sm:px-4 sm:py-3 h-10 sm:h-12 outline-none ghost-border transition-colors cursor-pointer
+                    className={`w-full max-w-full truncate appearance-none bg-surface-container-low text-on-surface text-xs sm:text-sm font-medium rounded-xl px-4 py-2 sm:py-3 h-10 sm:h-12 outline-none ghost-border transition-colors cursor-pointer pe-10
                     ${error ? '!border-error' : 'focus:!border-primary'} ${className}`}
                     defaultValue=""
                 >
-                    {/* الخيار الافتراضي (Placeholder) */}
+
                     <option value="" disabled hidden className="text-on-surface-variant/50">
                         {placeholder}
                     </option>
-
-                    {/* الخيارات بتاعتك */}
                     {options.map((option, index) => (
                         <option key={index} value={option.value} className="text-on-surface bg-surface text-xs sm:text-sm">
                             {option.label}
@@ -42,7 +43,7 @@ const Select = forwardRef(({
                 </select>
 
                 {/* 3. الأيقونة بتاعتك (هتفضل موجودة ومش هتتأثر بالضغطة لأننا مدينها pointer-events-none) */}
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">
+                <span className="absolute end-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">
                     <IoCaretDownSharp />
                 </span>
             </div>

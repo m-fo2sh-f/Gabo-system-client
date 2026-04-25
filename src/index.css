@@ -183,6 +183,21 @@
     font-family: var(--font-body);
   }
 
+  /* Force tables to remain LTR regardless of language */
+  .overflow-x-auto:has(table) {
+    direction: ltr;
+  }
+
+  table {
+    direction: ltr;
+    text-align: left;
+  }
+
+  table th,
+  table td {
+    text-align: left;
+  }
+
   h1,
   h2,
   h3,
@@ -224,6 +239,17 @@
     opacity: 1;
     font-weight: 500;
   }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+
+  }
 }
 
 @layer utilities {
@@ -239,7 +265,31 @@
     @apply bg-secondary text-on-secondary px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-secondary/20 hover:opacity-90 transition-opacity flex items-center gap-2 cursor-pointer justify-center;
   }
 
-  
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    transition: background-color 5000s ease-in-out 0s;
+    -webkit-text-fill-color: var(--color-on-surface) !important;
+
+  }
+
+  input:disabled,
+  textarea:disabled,
+  select:disabled {
+    background-color: transparent !important;
+    /* أو أي لون إنت عايزه */
+    color: inherit !important;
+    /* عشان يورث لون الخط العادي */
+    opacity: 1 !important;
+    /* عشان الآيفون وسفاري */
+    -webkit-text-fill-color: inherit !important;
+    /* تغطية إضافية لبعض المتصفحات */
+    cursor: not-allowed;
+    /* عشان الماوس يدي شكل علامة الـ X أو الممنوع */
+  }
+
+
 
   .modal-shadow {
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);

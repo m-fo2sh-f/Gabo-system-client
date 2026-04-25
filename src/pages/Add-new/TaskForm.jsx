@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -10,15 +11,20 @@ import { useClients } from '../../hooks/api/useClients';
 import { useEmployees } from '../../hooks/api/useEmployees';
 
 import { useTaskTypes } from '../../hooks/api/useTaskType';
+import { MdSave } from "react-icons/md";
+
+import SearchableSelect from '../../components/common/SearchableSelect';
 
 const TaskForm = () => {
     const { id } = useParams();
     const isEdit = !!id;
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const {
         register,
         handleSubmit,
         reset,
+        control,
         formState: { errors }
     } = useForm({
         defaultValues: {
@@ -29,7 +35,7 @@ const TaskForm = () => {
 
     const { mutateAsync: createTask, isPending: isCreating, error: createError } = useCreateTask();
     const { mutateAsync: updateTask, isPending: isUpdating, error: updateError } = useUpdateTask();
-    const { data: taskData, isLoading: isLoadingInitial } = useTask(id);
+    const { data: taskData, isLoading: isLoadingInitial } = useTask(id, {},{ enabled: isEdit });
     const { data: taskTypesData, isLoading: taskTypesLoading } = useTaskTypes();
 
 
@@ -41,8 +47,8 @@ const TaskForm = () => {
     const apiError = createError || updateError;
 
 
-    const { data: clientsData, isLoading: clientsLoading } = useClients();
-    const { data: employeesData, isLoading: employeesLoading } = useEmployees();
+    const { data: clientsData, isLoading: clientsLoading } = useClients({ per_page: 'all' });
+    const { data: employeesData, isLoading: employeesLoading } = useEmployees({ per_page: 'all' });
 
     const taskTypeOptions = useMemo(() =>
         (taskTypesData?.data ?? []).map(t => ({ value: String(t.id), label: t.name })),
@@ -61,7 +67,7 @@ const TaskForm = () => {
         if (isEdit && taskData?.data) {
             const data = taskData.data;
             reset({
-                name: data.task_name ?? '',
+                name: data.name ?? '',
                 client_id: data.client_id ?? '',
                 employee_id: data.employee_id ?? '',
                 task_type_id: data.task_type_id ?? '',
@@ -81,24 +87,24 @@ const TaskForm = () => {
 
             const payload = {
                 name: data.name,
-                ...(data.client_id && { client_id: parseInt(data.client_id) }),
-                ...(data.employee_id && { employee_id: parseInt(data.employee_id) }),
-                ...(data.task_type_id && { task_type_id: parseInt(data.task_type_id) }),
-                ...(data.price && { price: parseFloat(data.price) }),
-                ...(data.cost !== undefined && { cost: parseFloat(data.cost) }),
-                ...(data.status && { status: data.status }),
-                ...(data.start_date && { start_date: data.start_date }),
-                ...(data.end_date && { end_date: data.end_date }),
-                ...(data.notes && { notes: data.notes }),
+                client_id: parseInt(data.client_id) || null,
+                employee_id: parseInt(data.employee_id) || null,
+                task_type_id: parseInt(data.task_type_id) || null,
+                price: parseFloat(data.price) || 0,
+                cost: parseFloat(data.cost) || 0,
+                status: data.status || 'pending',
+                start_date: data.start_date || null,
+                end_date: data.end_date || null,
+                notes: data.notes || null,
             };
 
             if (isEdit) {
                 await updateTask({ id, ...payload });
-                toast.success('Task updated successfully!');
+                toast.success(t('forms.task.update_success'));
                 navigate(`/details/task/${id}`);
             } else {
                 await createTask(payload);
-                toast.success('Task created successfully!');
+                toast.success(t('forms.task.create_success'));
                 navigate('/tasks');
             }
         } catch {
@@ -125,85 +131,95 @@ const TaskForm = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Client */}
                 <Input
-                    label="Task Name"
+                    label={t('forms.task.name')}
                     type="text"
-                    {...register('name', { required: 'Task name is required' })}
-                    error={errors.task_name?.message}
+                    placeholder={t('forms.task.task_name')}
+                    {...register('name', { required: t('forms.validation.required') })}
+                    error={errors.name?.message}
                 />
 
-                <Select
-                    label="Client"
+                <SearchableSelect
+                    name="client_id"
+                    control={control}
+                    label={t('forms.task.client')}
                     options={clientOptions}
-                    placeholder={clientsLoading ? 'Loading clients...' : 'Select Client'}
-                    {...register('client_id', { required: 'Client is required' })}
+                    isLoading={clientsLoading}
+                    placeholder={clientsLoading ? t('forms.task.loading_clients') : t('forms.task.select_client')}
+                    rules={{ required: t('forms.validation.required') }}
                     error={errors.client_id?.message}
                 />
-
-
-
-                <Select
-                    label="Assigned Employee"
+                <SearchableSelect
+                    name="employee_id"
+                    control={control}
+                    label={t('forms.task.employee')}
                     options={employeeOptions}
-                    placeholder={employeesLoading ? 'Loading employees...' : 'Select Employee'}
-                    {...register('employee_id', { required: 'Employee is required' })}
+                    isLoading={employeesLoading}
+                    placeholder={employeesLoading ? t('forms.task.loading_employees') : t('forms.task.select_employee')}
+                    rules={{ required: t('forms.validation.required') }}
                     error={errors.employee_id?.message}
                 />
 
                 <Select
-                    label="Task Type"
+                    label={t('forms.task.type')}
                     options={taskTypeOptions}
-                    placeholder={taskTypesLoading ? 'Loading task types...' : 'Select Task Type'}
-                    {...register('task_type_id', { required: 'Task type is required' })} // التعديل هنا
+                    placeholder={taskTypesLoading ? t('forms.task.loading_task_types') : t('forms.task.select_task_type')}
+                    {...register('task_type_id', { required: t('forms.validation.required') })} // التعديل هنا
                     error={errors.task_type_id?.message} // التعديل هنا
                 />
 
                 <Select
-                    label="Task Status"
-                    options={taskStatusOptions}
-                    placeholder="Select Status"
-                    {...register('status', { required: 'Task status is required' })}
+                    label={t('forms.task.status')}
+                    options={taskStatusOptions.map(opt => ({ ...opt, label: t(`options.status.${opt.value}`) }))}
+                    placeholder={t('common.status')}
+                    {...register('status', { required: t('forms.validation.required') })}
                     error={errors.status?.message}
                 />
 
                 <Input
-                    label="Start Date"
+                    label={t('forms.task.start_date')}
                     type="date"
                     {...register('start_date')}
                     error={errors.start_date?.message}
                 />
 
                 <Input
-                    label="End Date"
+                    label={t('forms.task.end_date')}
                     type="date"
                     {...register('end_date')}
                     error={errors.end_date?.message}
                 />
 
                 <Input
-                    label="Price"
-                    type="number"
-                    placeholder="0.00"
+                    label={t('forms.task.price')}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="5000 EGP"
                     {...register('price', {
-                        required: 'Price is required',
-                        min: { value: 0, message: 'Must be ≥ 0' }
+                        required: t('forms.validation.required'),
+                        min: { value: 0, message: t('forms.validation.min_zero') },
+                        pattern: { value: /^[0-9]+(\.[0-9]+)?$/, message: t('forms.validation.invalid_number') }
                     })}
                     error={errors.price?.message}
                 />
 
                 <Input
-                    label="Cost"
-                    type="number"
-                    placeholder="0.00"
-                    defaultValue={0}
-                    {...register('cost', { min: { value: 0, message: 'Must be ≥ 0' } })}
+                    label={t('forms.task.cost')}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="5000 EGP"
+                    {...register('cost', {
+                        required: t('forms.validation.required'),
+                        min: { value: 0, message: t('forms.validation.min_zero') },
+                        pattern: { value: /^[0-9]+(\.[0-9]+)?$/, message: t('forms.validation.invalid_number') }
+                    })}
                     error={errors.cost?.message}
                 />
             </div>
 
             <Input
-                label="Notes"
+                label={t('common.notes')}
                 type="textarea"
-                placeholder="Enter any additional notes here..."
+                placeholder={t('forms.client.notes_placeholder')}
                 rows={4}
                 {...register('notes')}
             />
@@ -211,7 +227,7 @@ const TaskForm = () => {
             {/* API Error */}
             {apiError && (
                 <div className="rounded-lg bg-error/10 border border-error/20 text-error text-sm px-4 py-3">
-                    {apiError?.response?.data?.message ?? 'Something went wrong. Please try again.'}
+                    {apiError?.response?.data?.message ?? t('common.failure')}
                 </div>
             )}
 
@@ -225,12 +241,12 @@ const TaskForm = () => {
                     {isPending ? (
                         <>
                             <span className="w-4 h-4 border-2 border-on-primary/30 border-t-on-primary rounded-full animate-spin" />
-                            Saving...
+                            {t('forms.client.saving')}
                         </>
                     ) : (
                         <>
-                            <span className="material-symbols-outlined text-[18px]">save</span>
-                            {isEdit ? 'Update Task' : 'Save Task'}
+                            <span className="material-symbols-outlined text-[18px]"><MdSave /></span>
+                            {isEdit ? t('forms.task.update_btn') : t('forms.task.save_btn')}
                         </>
                     )}
                 </button>

@@ -1,8 +1,11 @@
 
 import React from 'react'
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from 'react-icons/md'
+import { useTranslation } from 'react-i18next';
 
 const Pagination = ({ meta, setPage }) => {
+    const { i18n } = useTranslation();
+
     return (
         <div className="flex items-center justify-between pt-6 mt-2">
             <span className="text-sm text-on-surface-variant">
@@ -16,7 +19,7 @@ const Pagination = ({ meta, setPage }) => {
                     disabled={meta.current_page === 1}
                     className="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    <MdKeyboardArrowLeft className="text-[20px]" />
+                    {i18n.language === 'ar' ? <MdKeyboardArrowRight className="text-[20px]" /> : <MdKeyboardArrowLeft className="text-[20px]" />}
                 </button>
 
                 {/* رقم الصفحة الحالية */}
@@ -30,7 +33,7 @@ const Pagination = ({ meta, setPage }) => {
                     disabled={meta.current_page === meta.last_page || !meta.last_page}
                     className="p-2 rounded-lg text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    <MdKeyboardArrowRight className="text-[20px]" />
+                    {i18n.language === 'ar' ? <MdKeyboardArrowLeft className="text-[20px]" /> : <MdKeyboardArrowRight className="text-[20px]" />}
                 </button>
             </div>
         </div >

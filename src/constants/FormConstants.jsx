@@ -18,5 +18,5 @@ export const socialMediaOptions = [{ value: 'facebook', label: 'Facebook' }, { v
 // Transaction constants
 export const transactionTypeOptions = [{ label: 'Income', value: 'income' }, { label: 'Expense', value: 'expense' }]
 export const incomeCategoryOptions = [{ label: 'Task Payment', value: 'task_payment' }, { label: 'Manual Collection', value: 'manual_collection' }, { label: 'General Income', value: 'general_income' }]
-export const expenseCategoryOptions = [{ label: 'Salary', value: 'salary' }, { label: 'Ads', value: 'ads' }, { label: 'Rent', value: 'rent' }, { label: 'Other', value: 'other' }]
+export const expenseCategoryOptions = [{ label: 'Task Payment', value: 'task_payment' }, { label: 'Salary', value: 'salary' }, { label: 'Ads', value: 'ads' }, { label: 'Rent', value: 'rent' }, { label: 'Other', value: 'other' }]
 export const paymentMethodOptions = [{ label: 'Cash', value: 'cash' }, { label: 'InstaPay', value: 'instapay' }, { label: 'Vodafone Cash', value: 'vodafone_cash' }, { label: 'Other', value: 'other' }]

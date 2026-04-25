@@ -1,61 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Input from '../../components/common/input';
 import { MdEdit, MdContentPasteSearch } from "react-icons/md";
 import { IoSearchSharp } from "react-icons/io5";
 import { useNavigate } from 'react-router-dom';
 import { useTasks } from '../../hooks/api/useTasks';
 import Pagination from '../../components/common/Pagination';
+import { useTranslation } from 'react-i18next';
+import TableSkeleton from '../../components/common/TableSkeleton';
+import { getStatusDot } from '../../utils/getStatusStyleIcon';
 
-
+import { useTaskTypes } from '../../hooks/api/useTaskType';
 const Tasks = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [search, setSearch] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
+    const [filterTaskType, setFilterTaskType] = useState('all');
     const [page, setPage] = useState(1);
+
+    useEffect(() => {
+        setPage(1);
+    }, [search, filterStatus, filterTaskType]);
 
     const filters = { page };
     if (search) filters.search = search;
+    if (filterTaskType != 'all') filters.task_type = filterTaskType;
     if (filterStatus !== 'all') filters.status = filterStatus;
 
-    const { data, isLoading, isError, error } = useTasks(filters, page);
+    const { data, isLoading, isError, error } = useTasks(filters);
     const tasks = data?.data.data ?? [];
     const meta = data?.data.meta;
 
-    const getStatusStyle = (status) => {
-        switch (status) {
-            case 'completed': return 'bg-success/10 text-success border border-success/20';
-            case 'pending': return 'bg-warning/10 text-warning border border-warning/20';
-            case 'cancelled': return 'bg-error/10 text-error border border-error/20';
-            default: return 'bg-surface-container-high text-on-surface-variant';
-        }
-    };
+
+    const { data: types, isLoading: isLoadingTaskTypes, isError: isErrorTaskTypes, error: errorTaskTypes } = useTaskTypes();
+    const tasksTypes = types?.data ?? [];
 
     const renderSkeletonRows = () =>
-        Array.from({ length: 4 }).map((_, i) => (
-            <tr key={i} className="animate-pulse">
-                <td className="py-4 pl-2 border-b border-surface-container-high/50">
-                    <div className="space-y-2">
-                        <div className="h-3 w-32 bg-surface-container-high rounded" />
-                        <div className="h-2 w-20 bg-surface-container-high rounded" />
-                    </div>
-                </td>
-                <td className="py-4 border-b border-surface-container-high/50 hidden sm:table-cell">
-                    <div className="h-3 w-28 bg-surface-container-high rounded" />
-                </td>
-                <td className="py-4 border-b border-surface-container-high/50 hidden md:table-cell">
-                    <div className="h-5 w-20 bg-surface-container-high rounded-full" />
-                </td>
-                <td className="py-4 border-b border-surface-container-high/50">
-                    <div className="h-5 w-16 bg-surface-container-high rounded-full" />
-                </td>
-                <td className="py-4 text-right border-b border-surface-container-high/50">
-                    <div className="h-3 w-16 bg-surface-container-high rounded ml-auto" />
-                </td>
-                <td className="py-4 text-right pr-2 border-b border-surface-container-high/50 hidden lg:table-cell">
-                    <div className="h-3 w-12 bg-surface-container-high rounded ml-auto" />
-                </td>
-            </tr>
-        ));
+        <TableSkeleton rows={4} cols={5} />
 
     return (
         <div className="space-y-6">
@@ -63,8 +44,8 @@ const Tasks = () => {
                 {/* Toolbar */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                     <div>
-                        <h3 className="font-headline text-2xl font-bold text-on-surface">Tasks Management</h3>
-                        <p className="text-sm text-on-surface-variant mt-1">Track ongoing and completed tasks.</p>
+                        <h3 className="font-headline text-2xl font-bold text-on-surface">{t('tables.tasks_database')}</h3>
+                        <p className="text-sm text-on-surface-variant mt-1">{t('tables.tasks_subtitle_desc')}</p>
                     </div>
                     <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
                         <select
@@ -76,6 +57,16 @@ const Tasks = () => {
                             <option value="pending">Pending</option>
                             <option value="completed">Completed</option>
                             <option value="cancelled">Cancelled</option>
+                        </select>
+                        <select
+                            className="w-full sm:w-auto bg-surface-container-low focus:bg-surface-container-lowest border border-transparent focus:border-primary/40 rounded-lg py-2 px-4 text-sm font-body text-on-surface focus:outline-none transition-all duration-200 cursor-pointer"
+                            value={filterTaskType}
+                            onChange={(e) => setFilterTaskType(e.target.value)}
+                        >
+                            <option value="all">All Task Types</option>
+                            {isLoadingTaskTypes ? <option>Loading...</option> : errorTaskTypes ? <option>Error</option> : tasksTypes.map((taskType) => (
+                                <option key={taskType.id} value={taskType.id}>{taskType.name}</option>
+                            ))}
                         </select>
 
                         <div className="relative w-full sm:w-auto">
@@ -113,8 +104,8 @@ const Tasks = () => {
                         </thead>
                         <tbody className="font-body text-sm text-on-surface">
                             {isLoading ? renderSkeletonRows() : tasks.length > 0 ? tasks.map((task) => (
-                                <tr key={task.id} onClick={() => navigate(`/details/task/${task.id}`)} className="hover:bg-surface-container-high/30 transition-colors group cursor-pointer" title="Click to view task details">
-                                    <td className="py-4 pl-2 border-b border-surface-container-high/50">
+                                <tr key={task.id} onClick={() => navigate(`/details/task/${task.id}`)} className=" hover:bg-surface-container-high/30 transition-colors group cursor-pointer" title="Click to view task details">
+                                    <td className=" py-4 pl-2 border-b border-surface-container-high/50">
                                         <div className="flex flex-col">
                                             <span className="font-semibold text-on-surface group-hover:text-primary transition-colors">
                                                 {task.name.length > 30 ? task.name.substring(0, 30) + '...' : task.name}
@@ -133,15 +124,17 @@ const Tasks = () => {
                                     <td className="py-4 border-b border-surface-container-high/50 text-on-surface capitalize hidden md:table-cell">
                                         {task.task_type?.name ?? task.task_type ?? '—'}
                                     </td>
-                                    <td className="py-4 border-b border-surface-container-high/50">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium capitalize ${getStatusStyle(task.status)}`}>
-                                            {task.status}
-                                        </span>
+
+                                    <td className="py-4 border-b border-surface-container-high/50 text-on-surface capitalize hidden md:table-cell">
+                                        <div className="flex items-center justify-start gap-1.5">
+                                            <div className={`w-2 h-2 rounded-full ${getStatusDot(task.status)}`} />
+                                            <span className="capitalize text-sm">{task.status ?? '—'}</span>
+                                        </div>
                                     </td>
-                                    <td className="py-4 text-right font-medium font-headline border-b border-surface-container-high/50">
+                                    <td className="py-4 text-emerald-500! text-right font-medium font-headline border-b border-surface-container-high/50">
                                         ${parseFloat(task.price ?? 0).toLocaleString()}
                                     </td>
-                                    <td className="py-4 text-right pr-2 font-medium font-headline text-secondary border-b border-surface-container-high/50 hidden lg:table-cell">
+                                    <td className="py-4 text-right pr-2 font-medium font-headline text-error border-b border-surface-container-high/50 hidden lg:table-cell">
                                         ${parseFloat(task.cost ?? 0).toLocaleString()}
                                     </td>
                                     <td className="py-4 border-b border-surface-container-high/50 text-center pr-2">

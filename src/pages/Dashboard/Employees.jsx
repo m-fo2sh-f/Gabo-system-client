@@ -7,21 +7,29 @@ import { useEmployees } from '../../hooks/api/useEmployees';
 import Pagination from '../../components/common/Pagination';
 import capitalize from '../../utils/capitalize';
 import { MdPersonSearch } from "react-icons/md";
-
+import { useTranslation } from 'react-i18next';
+import { getStatusDot } from '../../utils/getStatusStyleIcon';
+import TableSkeleton from '../../components/common/TableSkeleton';
+import useJobTitles from '../../hooks/api/useJobTitles';
 
 const Employees = () => {
+    const { t } = useTranslation();
     const [search, setSearch] = useState('');
     const [filterType, setFilterType] = useState('all');
+    const [jobTitle, setJobTitle] = useState('all');
     const [page, setPage] = useState(1);
     const navigate = useNavigate();
     const filters = { page };
     if (search) filters.search = search;
+    if (jobTitle !== 'all') filters.job_title_id = jobTitle;
     if (filterType !== 'all') filters.employment_type = filterType;
 
 
 
     const { data, isLoading, isError, error } = useEmployees(filters);
-    console.log(data);
+
+    const { data: jobTitlesData, isLoading: isLoadingJobTitles, isError: isErrorJobTitles, error: errorJobTitles } = useJobTitles();
+    const jobTitles = jobTitlesData?.data ?? [];
 
     const employees = data?.data?.data ?? [];
     const meta = data?.data?.meta;
@@ -33,38 +41,11 @@ const Employees = () => {
 
     };
 
-    const getStatusDot = (status) => {
-        switch (status) {
-            case 'active': return 'bg-emerald-500';
-            case 'paused': return 'bg-amber-400';
-            case 'stopped': return 'bg-error';
-            default: return 'bg-outline';
-        }
-    };
+
 
     const renderSkeletonRows = () =>
-        Array.from({ length: 4 }).map((_, i) => (
-            <tr key={i} className="animate-pulse">
-                <td className="py-4 pl-2 border-b border-surface-container-high/50">
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-surface-container-high" />
-                        <div className="space-y-2">
-                            <div className="h-3 w-32 bg-surface-container-high rounded" />
-                            <div className="h-2 w-20 bg-surface-container-high rounded" />
-                        </div>
-                    </div>
-                </td>
-                <td className="py-4 border-b border-surface-container-high/50 hidden sm:table-cell">
-                    <div className="h-3 w-28 bg-surface-container-high rounded" />
-                </td>
-                <td className="py-4 border-b border-surface-container-high/50 hidden md:table-cell">
-                    <div className="h-5 w-16 bg-surface-container-high rounded-full" />
-                </td>
-                <td className="py-4 text-right pr-2 border-b border-surface-container-high/50">
-                    <div className="h-3 w-16 bg-surface-container-high rounded ml-auto" />
-                </td>
-            </tr>
-        ));
+        <TableSkeleton rows={4} cols={5} />
+
 
     return (
         <div className="space-y-6">
@@ -72,8 +53,8 @@ const Employees = () => {
                 {/* Toolbar */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                     <div>
-                        <h3 className="font-headline text-2xl font-bold text-on-surface">Team Performance</h3>
-                        <p className="text-sm text-on-surface-variant mt-1">Monitor employee contribution and revenues.</p>
+                        <h3 className="font-headline text-2xl font-bold text-on-surface">{t('tables.employees_database')}</h3>
+                        <p className="text-sm text-on-surface-variant mt-1">{t('tables.employees_subtitle_desc')}</p>
                     </div>
                     <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
                         <select
@@ -86,6 +67,16 @@ const Employees = () => {
                             <option value="part_time">Part-time</option>
                             <option value="internship">Internship</option>
                             <option value="freelance">Freelance</option>
+                        </select>
+                        <select
+                            className="w-full sm:w-auto bg-surface-container-low focus:bg-surface-container-lowest border border-transparent focus:border-primary/40 rounded-lg py-2 px-4 text-sm font-body text-on-surface focus:outline-none transition-all duration-200 cursor-pointer"
+                            value={jobTitle}
+                            onChange={(e) => setJobTitle(e.target.value)}
+                        >
+                            <option value="all">All Job Titles</option>
+                            {isLoadingJobTitles ? <option>Loading...</option> : errorJobTitles ? <option>Error</option> : jobTitles.map((jobTitle) => (
+                                <option key={jobTitle.id} value={jobTitle.id}>{jobTitle.name}</option>
+                            ))}
                         </select>
 
                         <div className="relative w-full sm:w-auto">

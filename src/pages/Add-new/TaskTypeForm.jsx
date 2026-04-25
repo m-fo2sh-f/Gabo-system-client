@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
 import Input from '../../components/common/input'
 import { useTaskTypes, useCreateTaskType, useDeleteTaskType } from '../../hooks/api/useTaskType'
 import toast from 'react-hot-toast'
 import DeleteModel from "../../components/common/DeleteModel";
 import { MdDelete } from 'react-icons/md'
+import { MdSave } from "react-icons/md";
 
 
 
 const TaskTypeForm = () => {
     const [deletingItem, setDeletingItem] = useState(null);
+    const { t } = useTranslation();
     const {
         register,
         handleSubmit,
@@ -33,12 +36,10 @@ const TaskTypeForm = () => {
 
     const onSubmit = async (data) => {
         try {
-
             await createTaskType(data);
-            toast.success('Task type created successfully!');
+            toast.success(t('forms.task.create_success'));
             listRefetch();
             reset(); // فضي الفورم بعد الإضافة
-
         } catch {
             // Error is handled in UI
         }
@@ -47,14 +48,11 @@ const TaskTypeForm = () => {
     const handleDelete = async (id) => {
         try {
             await deleteTaskType(deletingItem.id); // استخدم الـ ID المحفوظ
-            toast.success('Task type deleted successfully!');
+            toast.success(t('forms.task.delete_success'));
             setDeletingItem(null); // اقفل المودال ونظف الـ State
             listRefetch();
-            // لو مسح العنصر وهو فاتحه في الفورم، فضي الفورم
-
         } catch {
             // captured in apiError
-
         }
     }
 
@@ -85,16 +83,16 @@ const TaskTypeForm = () => {
         <>
             <form onSubmit={handleSubmit(onSubmit)}>
                 <Input
-                    label="Task Type"
-                    placeholder="Enter Task Type"
+                    label={t('forms.task.task_type')}
+                    placeholder={t('forms.task.enter_task_type')}
                     disabled={isPending}
-                    {...register('name', { required: 'Task type is required' })}
+                    {...register('name', { required: t('forms.validation.required') })}
                     error={errors.name?.message}
                 />
                 {/* API Error */}
                 {apiError && (
                     <div className="rounded-lg bg-error/10 border border-error/20 text-error text-sm px-4 py-3">
-                        {apiError?.response?.data?.message ?? 'Something went wrong. Please try again.'}
+                        {apiError?.response?.data?.message ?? t('common.failure')}
                     </div>
                 )}
 
@@ -108,11 +106,12 @@ const TaskTypeForm = () => {
                         {isPending ? (
                             <>
                                 <span className="w-4 h-4 border-2 border-on-primary/30 border-t-on-primary rounded-full animate-spin" />
-                                Saving...
+                                {t('forms.client.saving')}
                             </>
                         ) : (
                             <>
-                                Save Task Type
+                                <span className="material-symbols-outlined text-[18px]"><MdSave /></span>
+                                {t('forms.task.save_task_type')}
                             </>
                         )}
                     </button>
@@ -122,9 +121,9 @@ const TaskTypeForm = () => {
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="text-xs font-label uppercase tracking-wider text-secondary border-b border-surface-container-highest">
-                            <th className="pb-4 font-medium pl-2">ID</th>
-                            <th className="pb-4 font-medium pl-2">Task Type</th>
-                            <th className="pb-4 font-medium text-center pr-2 w-10">Actions</th>
+                            <th className="pb-4 font-medium pl-2 text-left">{t('common.id')}</th>
+                            <th className="pb-4 font-medium pl-2 text-left">{t('forms.task.task_type')}</th>
+                            <th className="pb-4 font-medium text-center pr-2 w-10">{t('common.actions')}</th>
                         </tr>
                     </thead>
                     <tbody className="font-body text-sm text-on-surface">
@@ -152,8 +151,7 @@ const TaskTypeForm = () => {
                             <tr>
                                 <td colSpan="6" className="py-12 text-center text-on-surface-variant">
                                     <div className="flex flex-col items-center gap-2">
-                                        <MdPersonSearch className="text-[40px] text-outline" />
-                                        <p>No clients found matching your search.</p>
+                                        <p>{t('common.no_data')}</p>
                                     </div>
                                 </td>
                             </tr>

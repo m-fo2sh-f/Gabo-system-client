@@ -13,14 +13,15 @@ export const useTasks = (filters = {}) => {
   });
 };
 
-export const useTask = (id) => {
+export const useTask = (id,params = {}, options = {}) => {
   return useQuery({
-    queryKey: [...QUERY_KEY, id],
+    queryKey: [...QUERY_KEY, id, params],
     queryFn: async () => {
-      const { data } = await axiosInstance.get(`/v1/tasks/${id}`);
+      const { data } = await axiosInstance.get(`/v1/tasks/${id}`,{params});
       return data;
     },
     enabled: !!id,
+    ...options,
   });
 };
 
@@ -33,6 +34,7 @@ export const useCreateTask = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 };
@@ -47,6 +49,7 @@ export const useUpdateTask = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: [...QUERY_KEY, variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 };

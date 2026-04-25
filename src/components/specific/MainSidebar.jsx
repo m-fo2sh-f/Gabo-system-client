@@ -7,15 +7,26 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { IoMdSunny } from "react-icons/io";
 import { MdOutlineDarkMode } from "react-icons/md";
 import { useLocation, useNavigate } from 'react-router-dom';
-const MainSidebar = () => {
+import { useTranslation } from 'react-i18next';
+import { RiTranslate2 } from "react-icons/ri";
+
+const MainSidebar = ({ lang }) => {
+
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
     const location = useLocation();
+    const { t, i18n } = useTranslation();
+
     const isAddNewPage = location.pathname.startsWith('/add-new');
     const toggleMobileMenu = () => {
         setIsMobileMenuOpen(!isMobileMenuOpen);
     };
+    const toggleLanguage = () => {
+        const newLang = i18n.language === 'en' ? 'ar' : 'en';
+        i18n.changeLanguage(newLang);
+    };
+ 
 
     return (
         <>
@@ -34,11 +45,11 @@ const MainSidebar = () => {
                         )}
                     </button>
                     <h1 className="text-xl font-bold tracking-tight text-primary font-headline">
-                        Agency
+                        Agora
                     </h1>
                     <button
                         onClick={() => isAddNewPage ? navigate('/') : navigate('/add-new')}
-                        className='primary-btn'>{isAddNewPage ? 'Back' : 'Add New'}</button>
+                        className='primary-btn'>{isAddNewPage ? t('common.back') : t('sidebar.add_new')}</button>
                 </div>
                 {/* Mobile Menu Dropdown */}
                 {isMobileMenuOpen && (
@@ -60,7 +71,7 @@ const MainSidebar = () => {
                                         <span className={`transition-colors flex items-center justify-center w-6 h-6 ${isActive ? 'text-primary' : 'group-hover:text-primary text-on-surface-variant'}`}>
                                             {item.icon}
                                         </span>
-                                        <span className="text-sm font-label">{item.label}</span>
+                                        <span className="text-sm font-label">{t(item.label)}</span>
                                     </>
                                 )}
                             </NavLink>
@@ -75,27 +86,48 @@ const MainSidebar = () => {
                                         <IoMdSunny size={24} />
                                     </span>
 
-                                    <p >Light</p>
+                                    <p >{t('common.light')}</p>
                                 </>
                                 :
                                 <>
                                     <span className="transition-colors flex items-center justify-center w-6 h-6 text-on-surface group-hover:text-primary  ">
                                         <MdOutlineDarkMode size={24} />
                                     </span>
-                                    <p>Dark</p>
+                                    <p>{t('common.dark')}</p>
                                 </>
                             }
                         </button>
+                        <button
+                            onClick={toggleLanguage}
+                            className="flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group text-on-surface-variant hover:bg-primary/5 cursor-pointer">
+                            {lang === 'ar' ?
+                                <>
+                                    <span className="transition-colors flex items-center justify-center w-6 h-6 text-on-surface group-hover:text-primary  ">
+                                        <RiTranslate2 />
+                                    </span>
+
+                                    <p >English</p>
+                                </>
+                                :
+                                <>
+                                    <span className="transition-colors flex items-center justify-center w-6 h-6 text-on-surface group-hover:text-primary  ">
+                                        <RiTranslate2 />
+                                    </span>
+                                    <p>العربية</p>
+                                </>
+                            }
+                        </button>
+
                     </div>
                 )}
             </nav >
 
             {/* desktop sidebar */}
-            < nav className="fixed left-0 top-0 h-full w-64 hidden flex-col p-6 bg-surface-container-low border-r border-outline-variant/10 z-50 md:flex" >
+            < nav className={`fixed ${lang === 'ar' ? 'right-0' : 'left-0'} top-0 h-full w-64 hidden flex-col p-6 bg-surface-container-low border-r border-outline-variant/10 z-50 md:flex ${theme === 'dark' ? 'bg-[#09090b] border-white/10' : 'bg-white border-black/10'}`} >
                 {/* Logo Section */}
                 < div className="mb-12 px-4" >
                     <h1 className="text-xl font-bold tracking-tight text-primary font-headline">
-                        Canvas Agency
+                        Agora Agency
                     </h1>
                     <p className="text-sm text-on-surface-variant mt-1 font-body">
                         Media Management
@@ -121,7 +153,7 @@ const MainSidebar = () => {
                                         <span className={`transition-colors flex items-center justify-center w-6 h-6 ${isActive ? 'text-primary' : 'group-hover:text-primary text-on-surface-variant'}`}>
                                             {item.icon}
                                         </span>
-                                        <span className="text-sm font-label">{item.label}</span>
+                                        <span className="text-sm font-label">{t(item.label)}</span>
                                     </>
                                 )}
                             </NavLink>

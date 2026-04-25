@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import Input from '../../components/common/input';
 import Select from '../../components/common/select';
+import { MdSave } from "react-icons/md";
 import { paymentCycleOptions, clientStatusOptions, socialMediaOptions } from '../../constants/FormConstants.jsx';
 import { IoMdAddCircleOutline } from "react-icons/io";
 import { MdDelete } from "react-icons/md";
@@ -13,11 +15,15 @@ const ClientForm = () => {
     const { id } = useParams();
     const isEdit = !!id;
     const [oldClient, setOldClient] = useState(false)
+    const navigate = useNavigate();
+    const { t } = useTranslation();
+
 
 
     const { mutateAsync: createClient, isPending: isCreating, error: createError } = useCreateClient();
     const { mutateAsync: updateClient, isPending: isUpdating, error: updateError } = useUpdateClient();
-    const { data: clientData, isLoading: isLoadingInitial } = useClient(id);
+    const { data: clientData, isLoading: isLoadingInitial } = useClient(id, {}, { enabled: isEdit });
+
 
     const isPending = isCreating || isUpdating;
     const apiError = createError || updateError;
@@ -40,7 +46,8 @@ const ClientForm = () => {
 
     useEffect(() => {
         if (isEdit && clientData?.data) {
-            const data = clientData.data;
+
+            const data = clientData.data.client;
             reset({
                 name: data.name ?? '',
                 brand_name: data.brand_name ?? '',
@@ -49,10 +56,16 @@ const ClientForm = () => {
                 contract_start_date: data.contract_start_date ? data.contract_start_date.split('T')[0] : '', // format date if needed
                 contract_value: data.contract_value ?? '',
                 payment_cycle: data.payment_cycle ?? '',
+                next_payment_date: data.next_payment_date ? data.next_payment_date.split('T')[0] : '', // format date if needed
+                late_amount: data.late_amount ?? '',
+                is_late: data.is_late ?? false,
                 status: data.status ?? 'active',
                 notes: data.notes ?? '',
                 social_links: data.social_links ?? [],
             });
+            if (data.next_payment_date !== null) {
+                setOldClient(true);
+            }
         }
     }, [isEdit, clientData, reset]);
 
@@ -63,13 +76,13 @@ const ClientForm = () => {
             const payload = {
                 name: data.name,
                 phone: data.phone,
-                ...(data.brand_name && { brand_name: data.brand_name }),
-                ...(data.address && { address: data.address }),
-                ...(data.contract_start_date && { contract_start_date: data.contract_start_date }),
-                ...(data.contract_value && { contract_value: parseFloat(data.contract_value) }),
-                ...(data.payment_cycle && { payment_cycle: data.payment_cycle }),
-                ...(data.status && { status: data.status }),
-                ...(data.notes && { notes: data.notes }),
+                brand_name: data.brand_name || null,
+                address: data.address || null,
+                contract_start_date: data.contract_start_date || null,
+                contract_value: data.contract_value ? parseFloat(data.contract_value) : null,
+                payment_cycle: data.payment_cycle || null,
+                status: data.status || 'active',
+                notes: data.notes || null,
                 social_links: (data.social_links ?? []).filter(l => l.platform && l.url),
                 ...(oldClient ? {
                     next_payment_date: data.next_payment_date || null,
@@ -80,12 +93,14 @@ const ClientForm = () => {
 
             if (isEdit) {
                 await updateClient({ id, ...payload });
-                toast.success('Client updated successfully!');
+                toast.success(t('forms.client.update_success'));
                 navigate(`/details/client/${id}`);
+
             } else {
                 await createClient(payload);
-                toast.success('Client created successfully!');
+                toast.success(t('forms.client.create_success'));
                 navigate('/clients');
+
             }
         } catch {
             // error captured in apiError
@@ -111,66 +126,71 @@ const ClientForm = () => {
             {/* Main Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
-                    label="Client Name"
+                    label={t('forms.client.name')}
                     type="text"
 
-                    placeholder="Client Name"
-                    {...register('name', { required: 'Client Name is required' })}
+                    placeholder={t('forms.client.name')}
+                    {...register('name', { required: t('forms.validation.required') })}
                     error={errors.name?.message}
                 />
                 <Input
-                    label="Brand Name"
+                    label={t('forms.client.brand')}
                     type="text"
-                    placeholder="Brand Name"
+                    placeholder={t('forms.client.brand')}
                     {...register('brand_name')}
                     error={errors.brand_name?.message}
                 />
                 <Input
-                    label="Address"
+                    label={t('forms.client.address')}
                     type="text"
-                    placeholder="Address"
+                    placeholder={t('forms.client.address')}
                     {...register('address')}
                     error={errors.address?.message}
                 />
                 <Input
-                    label="Phone"
+                    label={t('forms.client.phone')}
                     type="text"
                     placeholder="+20 10 ..."
-                    {...register('phone', { required: 'Phone is required' })}
+                    {...register('phone', { required: t('forms.validation.required') })}
                     error={errors.phone?.message}
                 />
                 <Input
-                    label="Contract Start Date"
+                    label={t('forms.client.contract_start')}
                     type="date"
-                    {...register('contract_start_date', { required: 'Contract Start Date is required' })}
+                    {...register('contract_start_date', { required: t('forms.validation.required') })}
                     error={errors.contract_start_date?.message}
                 />
                 <Input
-                    label="Contract Value"
-                    type="number"
-                    placeholder="0.00"
-                    {...register('contract_value', { required: 'Contract Value is required', min: { value: 0, message: 'Must be ≥ 0' } })}
+                    label={t('forms.client.contract_value')}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="5000 EGP"
+                    {...register('contract_value', {
+                        required: t('forms.validation.required'),
+                        min: { value: 0, message: t('forms.validation.min_zero') },
+                        pattern: { value: /^[0-9]+(\.[0-9]+)?$/, message: t('forms.validation.invalid_number') }
+                    })}
                     error={errors.contract_value?.message}
                 />
                 <Select
-                    label="Payment Cycle"
-                    options={paymentCycleOptions}
-                    placeholder="Select Payment Cycle"
-                    {...register('payment_cycle', { required: 'Payment Cycle is required' })}
+                    label={t('forms.client.payment_cycle')}
+                    options={paymentCycleOptions.map(opt => ({ ...opt, label: t(`options.payment_cycle.${opt.value}`) }))}
+                    placeholder={t('forms.client.payment_cycle')}
+                    {...register('payment_cycle', { required: t('forms.validation.required') })}
                     error={errors.payment_cycle?.message}
                 />
                 <Select
-                    label="Client Status"
-                    placeholder="Select Client Status"
-                    options={clientStatusOptions}
-                    {...register('status', { required: 'Client Status is required' })}
+                    label={t('common.status')}
+                    placeholder={t('common.status')}
+                    options={clientStatusOptions.map(opt => ({ ...opt, label: t(`options.status.${opt.value}`) }))}
+                    {...register('status', { required: t('forms.validation.required') })}
                     error={errors.status?.message}
                 />
-                <div className="col-span-1 md:col-span-2 mt-2">
-                    <label className="block text-xs font-semibold text-on-surface-variant mb-3 uppercase tracking-wider">
-                        Client Type
+                <div className="col-span-1 md:col-span-2 mt-2" dir="ltr">
+                    <label className="block text-xs font-semibold text-on-surface-variant mb-3 uppercase tracking-wider" style={{ direction: 'inherit' }}>
+                        {t('forms.client.client_type')}
                     </label>
-                    <div className="relative flex p-1 bg-surface-container-low rounded-xl w-full md:w-1/2">
+                    <div className="relative flex p-1 bg-surface-container-low rounded-xl w-full md:w-1/2" dir="ltr">
                         <div
                             className={`absolute left-1 top-1 bottom-1 w-[calc(50%-0.25rem)] bg-surface-container-highest rounded-lg shadow-sm border border-outline-variant/10 z-0 transition-transform duration-300 ease-in-out ${oldClient ? 'translate-x-[calc(100%+0.125rem)]' : 'translate-x-0'}`}
                         />
@@ -182,7 +202,7 @@ const ClientForm = () => {
                             }}
                             className={`flex-1 py-2.5 text-sm z-10 relative transition-colors cursor-pointer ${!oldClient ? 'font-semibold text-primary' : 'font-medium text-on-surface-variant hover:text-on-surface'}`}
                         >
-                            New Client
+                            {t('forms.client.new_client')}
                         </button>
                         <button
                             type="button"
@@ -192,7 +212,7 @@ const ClientForm = () => {
                             }}
                             className={`flex-1 py-2.5 text-sm z-10 relative transition-colors cursor-pointer ${oldClient ? 'font-semibold text-primary' : 'font-medium text-on-surface-variant hover:text-on-surface'}`}
                         >
-                            Old Client
+                            {t('forms.client.old_client')}
                         </button>
                     </div>
                 </div>
@@ -200,20 +220,21 @@ const ClientForm = () => {
                 {oldClient && (
                     <>
                         <Input
-                            label="Next Payment Date"
+                            label={t('forms.client.next_payment')}
                             type="date"
-                            {...register('next_payment_date', { required: 'Next Payment Date is required' })}
+                            {...register('next_payment_date', { required: t('forms.validation.required') })}
                             error={errors.next_payment_date?.message}
                         />
                         <div className="flex items-center gap-2">
                             <input
                                 type="checkbox"
+                                checked={isLate}
                                 id="is_late"
                                 className="mt-7 w-6 h-6 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary dark:focus:ring-primary dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600"
                                 {...register('is_late')}
                             />
                             <label htmlFor="is_late" className="mt-7 text-sm font-medium text-on-surface-variant">
-                                Is Late
+                                {t('forms.client.is_late')}
                             </label>
                         </div>
                     </>
@@ -222,10 +243,15 @@ const ClientForm = () => {
 
                 {oldClient && isLate && (
                     <Input
-                        label="Late Amount"
-                        type="number"
-                        placeholder="Late Amount"
-                        {...register('late_amount', { required: 'Late Amount is required' })}
+                        label={t('forms.client.late_amount')}
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="0 EGP"
+                        {...register('late_amount', {
+                            required: t('forms.validation.required'),
+                            min: { value: 0, message: t('forms.validation.min_zero') },
+                            pattern: { value: /^[0-9]+(\.[0-9]+)?$/, message: t('forms.validation.invalid_number') }
+                        })}
                         error={errors.late_amount?.message}
                     />
                 )}
@@ -235,7 +261,7 @@ const ClientForm = () => {
             <div>
                 <div className="flex items-center justify-between mb-4">
                     <label className="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
-                        Social Media Links
+                        {t('forms.client.social_links')}
                     </label>
                     <button
                         type="button"
@@ -243,7 +269,7 @@ const ClientForm = () => {
                         className="text-sm text-primary font-semibold hover:text-primary-container transition-colors flex items-center gap-1 cursor-pointer"
                     >
                         <span className="text-[18px]"><IoMdAddCircleOutline /></span>
-                        Add Link
+                        {t('forms.client.add_link')}
                     </button>
                 </div>
                 <div className="space-y-3">
@@ -252,7 +278,7 @@ const ClientForm = () => {
                             <div className="w-1/3">
                                 <Select
                                     options={socialMediaOptions}
-                                    placeholder="Platform"
+                                    placeholder={t('forms.client.platform')}
                                     {...register(`social_links.${index}.platform`)}
                                 />
                             </div>
@@ -277,9 +303,9 @@ const ClientForm = () => {
             </div>
 
             <Input
-                label="Notes"
+                label={t('common.notes')}
                 type="textarea"
-                placeholder="Enter any additional notes here..."
+                placeholder={t('forms.client.notes_placeholder')}
                 rows={4}
                 {...register('notes')}
             />
@@ -287,7 +313,7 @@ const ClientForm = () => {
             {/* API Error */}
             {apiError && (
                 <div className="rounded-lg bg-error/10 border border-error/20 text-error text-sm px-4 py-3">
-                    {apiError?.response?.data?.message ?? 'Something went wrong. Please try again.'}
+                    {apiError?.response?.data?.message ?? t('common.failure')}
                 </div>
             )}
 
@@ -301,12 +327,12 @@ const ClientForm = () => {
                     {isPending ? (
                         <>
                             <span className="w-4 h-4 border-2 border-on-primary/30 border-t-on-primary rounded-full animate-spin" />
-                            Saving...
+                            {t('forms.client.saving')}
                         </>
                     ) : (
                         <>
-                            <span className="material-symbols-outlined text-[18px]">save</span>
-                            {isEdit ? 'Update Client' : 'Save Client'}
+                            <span className="material-symbols-outlined text-[18px]"><MdSave /></span>
+                            {isEdit ? t('forms.client.update_btn') : t('forms.client.save_btn')}
                         </>
                     )}
                 </button>
