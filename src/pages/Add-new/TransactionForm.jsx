@@ -121,24 +121,22 @@ const TransactionForm = () => {
         }
     }, [transactionType, setValue, isEdit]);
 
-    // 6. Populate Form for Edit Mode
-    // useEffect(() => {
-    //     if (isEdit && transactionData?.data) {
-    //         const data = transactionData.data;
-    //         reset({
-    //             type: data.type ?? 'income',
-    //             category: data.category ?? '',
-    //             amount: data.amount ?? '',
-    //             payment_method: data.payment_method ?? 'cash',
-    //             transaction_date: data.transaction_date ? data.transaction_date.split('T')[0] : '',
-    //             notes: data.notes ?? '',
-    //             client_id: data.client?.id ?? data.client_id ?? '',
-    //             employee_id: data.employee?.id ?? data.employee_id ?? '',
-    //             employee_id: data.employee_id ?? data.employee_id ?? '',
-    //             task_id: data.task?.id ?? data.task_id ?? '',
-    //         });
-    //     }
-    // }, [isEdit, transactionData, reset]);
+    useEffect(() => {
+        if (isEdit && transactionData?.data) {
+            const data = transactionData.data;
+            reset({
+                type: data.type ?? 'income',
+                category: data.category ?? '',
+                amount: data.amount ?? '',
+                payment_method: data.payment_method ?? 'cash',
+                transaction_date: data.transaction_date ? data.transaction_date.split('T')[0] : '',
+                notes: data.notes ?? '',
+                client_id: data.client?.id ?? data.client_id ?? '',
+                employee_id: data.employee_id ?? data.employee_id ?? '',
+                task_id: data.task?.id ?? data.task_id ?? '',
+            });
+        }
+    }, [isEdit, transactionData, reset]);
 
     // 7. Submit Handler
     const onSubmit = async (data) => {
@@ -178,7 +176,7 @@ const TransactionForm = () => {
             } else {
                 await createTransaction(payload);
                 toast.success(t('forms.transaction.create_success'));
-                // navigate('/transactions');
+                navigate('/transactions');
             }
 
         } catch {
