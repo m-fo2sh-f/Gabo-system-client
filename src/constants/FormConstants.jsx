@@ -10,7 +10,7 @@ export const workType = [{ label: 'Full Time', value: 'full_time' }, { label: 'P
 
 // Client constants
 export const clientStatusOptions = [{ label: 'Active', value: 'active' }, { label: 'Paused', value: 'paused' }, { label: 'Stopped', value: 'stopped' }]
-export const paymentCycleOptions = [{ label: 'Once', value: 'once' }, { label: 'Monthly', value: 'monthly' }, { label: 'Weekly', value: 'weekly' }]
+export const paymentCycleOptions = [{ label: 'one_time', value: 'once' }, { label: 'Monthly', value: 'monthly' }, { label: 'Weekly', value: 'weekly' }]
 
 // todo linkedin
 export const socialMediaOptions = [{ value: 'facebook', label: 'Facebook' }, { value: 'snapchat', label: 'Snapchat' }, { value: 'instagram', label: 'Instagram' }, { value: 'linkedin', label: 'LinkedIn' }, { value: 'tiktok', label: 'TikTok' }, { value: 'website', label: 'Website' },];
