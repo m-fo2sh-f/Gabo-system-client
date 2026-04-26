@@ -202,7 +202,7 @@
   },
   "options": {
     "payment_cycle": {
-      "once": "Once",
+      "one_time": "Once",
       "monthly": "Monthly",
       "weekly": "Weekly"
     },
