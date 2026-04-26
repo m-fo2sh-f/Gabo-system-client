@@ -52,7 +52,7 @@ const TransactionForm = () => {
     const { data: employeesData } = useEmployees({ per_page: 'all' }, { enabled: needsEmployees });
     const { data: tasksData } = useTasks({ status: 'pending', per_page: 'all' }, { enabled: needsTasks })
 
-    
+
     // 4. Dropdown Option Mappings
     const clientOptions = useMemo(() =>
         (clientsData?.data?.data ?? []).map(c => ({ value: String(c.id), label: c.name })),
@@ -110,7 +110,7 @@ const TransactionForm = () => {
             setValue('client_id', '');
             setValue('amount', '');
             setValue('employee_id', '');
-            setValue('collector_id', '');
+            setValue('employee_id', '');
             setValue('task_id', '');
         }
     }, [category, setValue, isEdit]);
@@ -122,23 +122,23 @@ const TransactionForm = () => {
     }, [transactionType, setValue, isEdit]);
 
     // 6. Populate Form for Edit Mode
-    useEffect(() => {
-        if (isEdit && transactionData?.data) {
-            const data = transactionData.data;
-            reset({
-                type: data.type ?? 'income',
-                category: data.category ?? '',
-                amount: data.amount ?? '',
-                payment_method: data.payment_method ?? 'cash',
-                transaction_date: data.transaction_date ? data.transaction_date.split('T')[0] : '',
-                notes: data.notes ?? '',
-                client_id: data.client?.id ?? data.client_id ?? '',
-                employee_id: data.employee?.id ?? data.employee_id ?? '',
-                collector_id: data.collector?.id ?? data.collector_id ?? '',
-                task_id: data.task?.id ?? data.task_id ?? '',
-            });
-        }
-    }, [isEdit, transactionData, reset]);
+    // useEffect(() => {
+    //     if (isEdit && transactionData?.data) {
+    //         const data = transactionData.data;
+    //         reset({
+    //             type: data.type ?? 'income',
+    //             category: data.category ?? '',
+    //             amount: data.amount ?? '',
+    //             payment_method: data.payment_method ?? 'cash',
+    //             transaction_date: data.transaction_date ? data.transaction_date.split('T')[0] : '',
+    //             notes: data.notes ?? '',
+    //             client_id: data.client?.id ?? data.client_id ?? '',
+    //             employee_id: data.employee?.id ?? data.employee_id ?? '',
+    //             employee_id: data.employee_id ?? data.employee_id ?? '',
+    //             task_id: data.task?.id ?? data.task_id ?? '',
+    //         });
+    //     }
+    // }, [isEdit, transactionData, reset]);
 
     // 7. Submit Handler
     const onSubmit = async (data) => {
@@ -157,7 +157,7 @@ const TransactionForm = () => {
                     // حماية من الـ NaN
                     payload.task_id = parseInt(data.task_id) || null;
                 } else if (data.category === 'manual_collection') {
-                    payload.collector_id = parseInt(data.collector_id) || null;
+                    payload.employee_id = parseInt(data.employee_id) || null;
                     payload.client_id = parseInt(data.client_id) || null;
                 }
             } else if (data.type === 'expense') {
@@ -178,7 +178,7 @@ const TransactionForm = () => {
             } else {
                 await createTransaction(payload);
                 toast.success(t('forms.transaction.create_success'));
-                navigate('/transactions');
+                // navigate('/transactions');
             }
 
         } catch {
@@ -246,13 +246,13 @@ const TransactionForm = () => {
                 {category === 'manual_collection' && (
                     <>
                         <SearchableSelect
-                            name="collector_id"
+                            name="employee_id"
                             control={control}
                             label={t('forms.transaction.collector')}
                             options={employeeOptions}
                             placeholder={t('forms.transaction.select_collector')}
                             rules={{ required: t('forms.validation.required') }}
-                            error={errors.collector_id?.message}
+                            error={errors.employee_id?.message}
                             disabled={isEdit}
                         />
                         <SearchableSelect
