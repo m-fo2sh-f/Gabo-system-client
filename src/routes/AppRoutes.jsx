@@ -25,7 +25,7 @@ import TaskDetails from '../pages/Details/TaskDetails';
 import TransactionDetails from '../pages/Details/TransactionDetails';
 
 // Auth imports
-import Login from '../pages/auth/login';
+import Login from '../pages/Auth/login';
 import ProtectedRoutes from './ProtectedRoutes';
 import GuestRoutes from './GuestRoutes';
 
