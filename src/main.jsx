@@ -6,6 +6,7 @@ import './index.css'
 import './i18n'
 import App from './App.jsx'
 import { AuthProvider } from './contexts/AuthContext.jsx'
+import { ThemeProvider } from './contexts/ThemeContext.jsx'
 import { Toaster } from 'react-hot-toast'
 
 const queryClient = new QueryClient({
@@ -19,10 +20,12 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById('root')).render(
 
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <App />
-      <Toaster position="top-right" />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <App />
+        <Toaster position="top-right" />
+      </AuthProvider>
+    </ThemeProvider>
     <ReactQueryDevtools initialIsOpen={false} />
   </QueryClientProvider>
 

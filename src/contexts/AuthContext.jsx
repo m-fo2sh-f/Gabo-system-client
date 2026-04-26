@@ -53,9 +53,50 @@ export const AuthProvider = ({ children }) => {
     };
 
 
+    const LoadingScreen = () => (
+        <div className="loading-screen">
+            {/* Animated logo */}
+            <div className="ls-logo-wrap">
+                <div className="ls-orbit-dot" />
+                <div className="ls-orbit-dot" />
+                <div className="ls-orbit-dot" />
+                <div className="ls-logo-inner">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            style={{ fill: 'none', stroke: 'var(--on-primary)' }}
+                        />
+                    </svg>
+                </div>
+            </div>
+
+            {/* Text */}
+            <div className="ls-text-group">
+                <span className="ls-title"> AGORA </span>
+                <span className="ls-subtitle">Verifying your Identity</span>
+            </div>
+
+            {/* Bouncing dots */}
+            <div className="ls-dots">
+                <span />
+                <span />
+                <span />
+            </div>
+
+            {/* Progress bar */}
+            <div className="ls-progress-track">
+                <div className="ls-progress-fill" />
+            </div>
+        </div>
+    );
+
     return (
         <AuthContext.Provider value={{ user, isAuthenticated, isLoading, loginUser, logoutUser }}>
-            {!isLoading ? children : <div className="loading-screen">Checking Auth...</div>}
+            {!isLoading ? children : <LoadingScreen />}
         </AuthContext.Provider>
     );
 };

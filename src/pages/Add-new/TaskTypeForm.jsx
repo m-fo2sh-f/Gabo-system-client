@@ -7,6 +7,7 @@ import toast from 'react-hot-toast'
 import DeleteModel from "../../components/common/DeleteModel";
 import { MdDelete } from 'react-icons/md'
 import { MdSave } from "react-icons/md";
+import { MdOutlineSubtitlesOff } from "react-icons/md";
 
 
 
@@ -151,6 +152,7 @@ const TaskTypeForm = () => {
                             <tr>
                                 <td colSpan="6" className="py-12 text-center text-on-surface-variant">
                                     <div className="flex flex-col items-center gap-2">
+                                        <MdOutlineSubtitlesOff className="text-[40px] text-outline" />
                                         <p>{t('common.no_data')}</p>
                                     </div>
                                 </td>
