@@ -97,11 +97,9 @@ const ClientForm = () => {
                 navigate(`/details/client/${id}`);
 
             } else {
-                // await createClient(payload);
-                // toast.success(t('forms.client.create_success'));
-                // navigate('/clients');
-                console.log(payload)
-
+                await createClient(payload);
+                toast.success(t('forms.client.create_success'));
+                navigate('/clients');
             }
         } catch {
             // error captured in apiError
