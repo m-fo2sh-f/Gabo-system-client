@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Input from '../../components/common/input';
+import Input from '../../components/common/Input';
 import { MdKeyboardArrowRight, MdKeyboardArrowLeft, MdEdit } from "react-icons/md";
 import { IoSearchSharp } from "react-icons/io5";
 import { useNavigate } from 'react-router-dom';

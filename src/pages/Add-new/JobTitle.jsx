@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
-import Input from '../../components/common/input'
+import Input from '../../components/common/Input'
 import useJobTitles, { useCreateJobTitle, useDeleteJobTitle } from '../../hooks/api/useJobTitles'
 import toast from 'react-hot-toast'
 import DeleteModel from "../../components/common/DeleteModel";
