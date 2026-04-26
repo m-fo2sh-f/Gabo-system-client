@@ -97,9 +97,10 @@ const ClientForm = () => {
                 navigate(`/details/client/${id}`);
 
             } else {
-                await createClient(payload);
-                toast.success(t('forms.client.create_success'));
-                navigate('/clients');
+                // await createClient(payload);
+                // toast.success(t('forms.client.create_success'));
+                // navigate('/clients');
+                console.log(payload)
 
             }
         } catch {
@@ -174,7 +175,7 @@ const ClientForm = () => {
                 />
                 <Select
                     label={t('forms.client.payment_cycle')}
-                    options={paymentCycleOptions.map(opt => ({ ...opt, label: t(`options.payment_cycle.${opt.value}`) }))}
+                    options={paymentCycleOptions.map(opt => ({ ...opt, label: t(`options.payment_cycle.${opt.label}`) }))}
                     placeholder={t('forms.client.payment_cycle')}
                     {...register('payment_cycle', { required: t('forms.validation.required') })}
                     error={errors.payment_cycle?.message}
